@@ -1,4 +1,4 @@
-#include "ImageExporter.h"
+#include "imageexporter.h"
 #include <QQuickItemGrabResult>
 #include <QSharedPointer>
 #include <QDebug>

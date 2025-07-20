@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 
 project(QuickEdits VERSION 0.1 LANGUAGES CXX)
 
+set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH "Installation directory" FORCE)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Qt6 REQUIRED COMPONENTS
@@ -12,11 +13,11 @@ qt_standard_project_setup(REQUIRES 6.8)
 
 set(SOURCES
     src/main.cpp
-    src/ImageExporter.cpp
+    src/imageexporter.cpp
 )
 
 set(HEADERS
-    include/ImageExporter.h
+    include/imageexporter.h
 )
 
 set(QML_FILES
@@ -52,6 +53,14 @@ include(GNUInstallDirs)
 
 install(TARGETS ${CMAKE_PROJECT_NAME}
     BUNDLE DESTINATION .
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
+
+qt_generate_deploy_qml_app_script(
+    TARGET ${CMAKE_PROJECT_NAME}
+    OUTPUT_SCRIPT deploy_script
+    NO_TRANSLATIONS
+    DEPLOY_TOOL_OPTIONS --no-compiler-runtime --no-opengl-sw --no-system-dxc-compiler --no-system-d3d-compiler --skip-plugin-types designer,iconengines,qmllint,generic,networkinformation,help,qmltooling,sqldrivers,qmlls
+)
+
+install(SCRIPT ${deploy_script})
