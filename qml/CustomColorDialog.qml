@@ -1,6 +1,6 @@
 pragma ComponentBehavior: Bound
 import QtQuick
-import QtQuick.Controls.Universal
+import QtQuick.Controls.Material
 import QtQuick.Layouts
 
 Dialog {
@@ -13,10 +13,20 @@ Dialog {
     property color selectedColor: "white"
     property color currentColor: "white"
 
+    standardButtons: Dialog.Ok | Dialog.Cancel
+
     signal colorAccepted()
     signal colorRejected()
 
-    Universal.theme: Universal.Dark
+    onAccepted: {
+        selectedColor = currentColor
+        colorAccepted()
+    }
+
+    onRejected: {
+        currentColor = selectedColor
+        colorRejected()
+    }
 
     ColumnLayout {
         anchors.fill: parent
@@ -24,6 +34,7 @@ Dialog {
 
         // Preview
         Rectangle {
+            radius: Material.ExtraSmallScale
             Layout.fillWidth: true
             Layout.preferredHeight: 30
             color: root.currentColor
@@ -39,14 +50,18 @@ Dialog {
 
             // Saturation-Value square
             Rectangle {
+                radius: Material.ExtraSmallScale
                 id: svRect
                 //Layout.preferredWidth: 200
                 Layout.fillWidth: true
                 Layout.preferredHeight: width
-                color: "#ff0000"
+                color: "#00000000"
+                border.color: root.palette.window
+                border.width: 1
 
                 // Black to transparent overlay for value (top to bottom - REVERTED)
                 Rectangle {
+                    radius: Material.ExtraSmallScale
                     anchors.fill: parent
                     gradient: Gradient {
                         GradientStop { position: 0.0; color: "#00000000" }  // Transparent at top
@@ -56,6 +71,7 @@ Dialog {
 
                 // White to transparent overlay for saturation (right to left - KEPT)
                 Rectangle {
+                    radius: Material.ExtraSmallScale
                     anchors.fill: parent
                     gradient: Gradient {
                         orientation: Gradient.Horizontal
@@ -107,6 +123,7 @@ Dialog {
 
             // Vertical hue gradient bar
             Rectangle {
+                radius: Material.ExtraSmallScale
                 Layout.preferredWidth: 20
                 Layout.fillHeight: true
 
@@ -121,6 +138,7 @@ Dialog {
                 }
 
                 Rectangle {
+                    radius: Material.ExtraSmallScale
                     id: hueCursor
                     width: parent.width
                     height: 8
@@ -169,30 +187,6 @@ Dialog {
                         root.currentColor = text
                         root.updateCursorsFromColor()
                     }
-                }
-            }
-        }
-
-        // Buttons
-        RowLayout {
-            Layout.fillWidth: true
-            Item { Layout.fillWidth: true }
-
-            Button {
-                text: "Cancel"
-                onClicked: {
-                    root.currentColor = root.selectedColor
-                    root.colorRejected()
-                    root.close()
-                }
-            }
-
-            Button {
-                text: "OK"
-                onClicked: {
-                    root.selectedColor = root.currentColor
-                    root.colorAccepted()
-                    root.close()
                 }
             }
         }

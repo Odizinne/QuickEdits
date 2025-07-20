@@ -3,6 +3,7 @@
 
 int main(int argc, char *argv[])
 {
+        qputenv("QT_QUICK_CONTROLS_MATERIAL_VARIANT", "Dense");
     QGuiApplication app(argc, argv);
 
     QQmlApplicationEngine engine;

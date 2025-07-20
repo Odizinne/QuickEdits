@@ -1,7 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
-import QtQuick.Controls.Universal
+import QtQuick.Controls.Material
 import QtQuick.Layouts
 import QtQuick.Dialogs
 import QtCore
@@ -15,7 +15,8 @@ ApplicationWindow {
     minimumWidth: 1400
     minimumHeight: 805
     title: "QuickEdits"
-    Universal.theme: Universal.Dark
+    Material.theme: Material.Dark
+    color: "#1C1C1C"
 
     property string currentImageSource: ""
     property var selectedTextItem: null
@@ -126,11 +127,14 @@ ApplicationWindow {
 
     RowLayout {
         anchors.fill: parent
-        anchors.margins: 10
-        spacing: 10
+        anchors.margins: 12
+        spacing: 12
 
         // Left panel - controls
-        Frame {
+        Pane {
+            Material.background: "#2B2B2B"
+            Material.elevation: 6
+            Material.roundedScale: Material.ExtraSmallScale
             Layout.preferredWidth: 300
             Layout.fillHeight: true
 
@@ -138,7 +142,7 @@ ApplicationWindow {
                 anchors.fill: parent
                 spacing: 8
 
-                Button {
+                MaterialButton {
                     Layout.fillWidth: true
                     text: "Upload Image"
                     onClicked: {
@@ -153,7 +157,7 @@ ApplicationWindow {
                     }
                 }
 
-                Button {
+                MaterialButton {
                     Layout.fillWidth: true
                     text: "Save Image"
                     enabled: mainWindow.currentImageSource !== ""
@@ -167,7 +171,7 @@ ApplicationWindow {
                     }
                 }
 
-                Button {
+                MaterialButton {
                     Layout.fillWidth: true
                     text: "Add Text Layer"
                     enabled: mainWindow.currentImageSource !== ""
@@ -181,7 +185,7 @@ ApplicationWindow {
                     }
                 }
 
-                Button {
+                MaterialButton {
                     Layout.fillWidth: true
                     text: "Add Image Layer"
                     enabled: mainWindow.currentImageSource !== ""
@@ -198,7 +202,7 @@ ApplicationWindow {
                     visible: mainWindow.currentImageSource !== ""
                     property int buttonWidth: Math.max(rtLeftBtn.implicitHeight, rtRightBtn.implicitHeight, rtResetBtn.implicitHeight)
 
-                    Button {
+                    MaterialButton {
                         id: rtLeftBtn
                         text: "↺ Left"
                         Layout.fillWidth: true
@@ -207,7 +211,7 @@ ApplicationWindow {
                             mainWindow.imageRotation -= 90
                         }
                     }
-                    Button {
+                    MaterialButton {
                         id: rtRightBtn
                         text: "↻ Right"
                         Layout.fillWidth: true
@@ -216,7 +220,7 @@ ApplicationWindow {
                             mainWindow.imageRotation += 90
                         }
                     }
-                    Button {
+                    MaterialButton {
                         id: rtResetBtn
                         text: "Reset"
                         Layout.fillWidth: true
@@ -278,6 +282,7 @@ ApplicationWindow {
 
                         SpinBox {
                             id: fontSize
+                            Layout.preferredWidth: 110
                             editable: true
                             from: 8
                             to: 200
@@ -310,7 +315,7 @@ ApplicationWindow {
                         }
                     }
 
-                    Button {
+                    MaterialButton {
                         id: colorButton
                         Layout.fillWidth: true
                         Layout.preferredHeight: 40
@@ -338,6 +343,7 @@ ApplicationWindow {
                             color: colorPicker.selectedColor
                             border.color: "#999"
                             border.width: 1
+                            radius: Material.ExtraSmallScale
                         }
                     }
 
@@ -350,7 +356,7 @@ ApplicationWindow {
                         }
                     }
 
-                    Button {
+                    MaterialButton {
                         id: textResetBtn
                         text: "Reset rotation"
                         Layout.fillWidth: true
@@ -361,7 +367,7 @@ ApplicationWindow {
                         }
                     }
 
-                    Button {
+                    MaterialButton {
                         Layout.fillWidth: true
                         text: "Delete Selected Item"
                         enabled: mainWindow.selectedTextItem !== null
@@ -388,7 +394,7 @@ ApplicationWindow {
                     spacing: 10
                     visible: mainWindow.selectedTextItem !== null && !mainWindow.selectedTextItem.hasOwnProperty('textContent')
 
-                    Button {
+                    MaterialButton {
                         id: imgResetBtn
                         text: "Reset rotation"
                         Layout.fillWidth: true
@@ -399,7 +405,7 @@ ApplicationWindow {
                         }
                     }
 
-                    Button {
+                    MaterialButton {
                         Layout.fillWidth: true
                         text: "Delete Selected Item"
                         enabled: mainWindow.selectedTextItem !== null
@@ -418,7 +424,10 @@ ApplicationWindow {
         }
 
         // Center panel - image area
-        Frame {
+        Pane {
+            Material.background: "#2B2B2B"
+            Material.elevation: 6
+            Material.roundedScale: Material.ExtraSmallScale
             Layout.fillWidth: true
             Layout.fillHeight: true
 
@@ -470,7 +479,10 @@ ApplicationWindow {
         }
 
         // Right panel - items list sidebar
-        Frame {
+        Pane {
+            Material.background: "#2B2B2B"
+            Material.elevation: 6
+            Material.roundedScale: Material.ExtraSmallScale
             Layout.preferredWidth: 250
             Layout.fillHeight: true
 
@@ -506,9 +518,10 @@ ApplicationWindow {
                                     id: rightRect
                                     Layout.fillWidth: true
                                     Layout.fillHeight: true
-                                    color: delegateRoot.model.isSelected ? "#40007acc" : "transparent"
-                                    border.color: delegateRoot.model.isSelected ? "#007acc" : "#333"
+                                    color: delegateRoot.model.isSelected ? "#40F48FB1" : "transparent"
+                                    border.color: delegateRoot.model.isSelected ? "#F48FB1" : "#333"
                                     border.width: 2
+                                    radius: Material.ExtraSmallScale
 
                                     MouseArea {
                                         anchors.fill: parent
@@ -543,19 +556,19 @@ ApplicationWindow {
                                         anchors.margins: 8
                                         spacing: 4
 
-                                        Text {
+                                        Label {
                                             Layout.fillWidth: true
                                             text: delegateRoot.model.preview
-                                            color: Universal.foreground
+                                            color: Material.foreground
                                             font.weight: delegateRoot.model.isSelected ? Font.Bold : Font.Normal
                                             elide: Text.ElideRight
+                                            font.pixelSize: 12
                                         }
 
-                                        Text {
+                                        Label {
                                             Layout.fillWidth: true
                                             text: delegateRoot.model.type + " - " + delegateRoot.model.details
-                                            color: Universal.accent
-                                            font.pixelSize: 10
+                                            font.pixelSize: 11
                                         }
                                     }
                                 }
@@ -565,8 +578,9 @@ ApplicationWindow {
                                     Layout.fillHeight: true
                                     spacing: 2
 
-                                    Button {
+                                    MaterialButton {
                                         Layout.preferredHeight: 25
+                                        Layout.preferredWidth: 25
                                         text: "▲"
                                         enabled: delegateRoot.index > 0
                                         font.pixelSize: 8
@@ -576,8 +590,9 @@ ApplicationWindow {
                                         }
                                     }
 
-                                    Button {
+                                    MaterialButton {
                                         Layout.preferredHeight: 25
+                                        Layout.preferredWidth: 25
                                         text: "▼"
                                         enabled: delegateRoot.index < itemsModel.count - 1
                                         font.pixelSize: 8
@@ -628,9 +643,10 @@ ApplicationWindow {
 
                 Rectangle {
                     anchors.fill: parent
-                    color: "#40007acc"
+                    color: "#40F48FB1"
                     border.width: 2
-                    border.color: "#007acc"
+                    border.color: "#F48FB1"
+                    radius: Material.ExtraSmallScale
                 }
             }
 
@@ -642,6 +658,7 @@ ApplicationWindow {
                 font.family: "Arial"
                 font.pixelSize: 24
                 color: "white"
+                selectByMouse: false
                 wrapMode: TextEdit.Wrap
             }
 
@@ -707,7 +724,7 @@ ApplicationWindow {
                 Rectangle {
                     anchors.fill: parent
                     radius: width / 2
-                    color: "#007acc"
+                    color: "#F48FB1"
                     border.color: "#ffffff"
                     border.width: 1
                 }
@@ -746,7 +763,8 @@ ApplicationWindow {
 
                 Rectangle {
                     anchors.fill: parent
-                    color: "#007acc"
+                    color: "#F48FB1"
+                    bottomRightRadius: Material.ExtraSmallScale
                 }
             }
         }
@@ -772,9 +790,10 @@ ApplicationWindow {
 
                 Rectangle {
                     anchors.fill: parent
-                    color: "#40007acc"
+                    color: "#40F48FB1"
                     border.width: 2
-                    border.color: "#007acc"
+                    border.color: "#F48FB1"
+                    radius: Material.ExtraSmallScale
                 }
             }
 
@@ -844,7 +863,7 @@ ApplicationWindow {
                 Rectangle {
                     anchors.fill: parent
                     radius: width / 2
-                    color: "#007acc"
+                    color: "#F48FB1"
                     border.color: "#ffffff"
                     border.width: 1
                 }
@@ -883,7 +902,8 @@ ApplicationWindow {
 
                 Rectangle {
                     anchors.fill: parent
-                    color: "#007acc"
+                    color: "#F48FB1"
+                    bottomRightRadius: Material.ExtraSmallScale
                 }
             }
         }

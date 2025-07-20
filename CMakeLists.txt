@@ -26,6 +26,7 @@ set(QML_FILES
     qml/Main.qml
     qml/ColorPicker.qml
     qml/CustomColorDialog.qml
+    qml/MaterialButton.qml
 )
 
 qt_add_executable(${CMAKE_PROJECT_NAME}
