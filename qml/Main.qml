@@ -139,10 +139,21 @@ ApplicationWindow {
         }
     }
 
+    Component.onCompleted: mainLyt.opacity = 1
+
     RowLayout {
+        id: mainLyt
         anchors.fill: parent
         anchors.margins: 15
         spacing: 15
+        opacity: Qt.platform.os === "wasm" ? 0 : 1
+
+        Behavior on opacity {
+            NumberAnimation {
+                duration: 300
+                easing.type: Easing.InQuad
+            }
+        }
 
         // Left panel - controls
         Pane {
