@@ -21,6 +21,41 @@ ApplicationWindow {
     property var selectedTextItem: null
     property real imageRotation: 0
 
+    Connections {
+        target: ImageExporter
+        function onSaveFileSelected(fileName) {
+            console.log("QML: Save file selected:", fileName)
+            if (Qt.platform.os === "wasm") {
+                // For WebAssembly, directly save with the selected name
+                ImageExporter.saveImage(imageContainer, fileName)
+            } else {
+                // For native, open the save dialog with suggested name
+                saveFileDialog.currentFile = Qt.resolvedUrl(saveFileDialog.currentFolder + "/" + fileName)
+                saveFileDialog.open()
+            }
+        }
+    }
+
+    Connections {
+        target: FileHandler
+        function onFileSelected(filePath) {
+            console.log("QML: Main image file selected:", filePath)
+            mainWindow.currentImageSource = filePath
+            imageContainer.visible = true
+        }
+
+        function onLayerImageSelected(filePath) {
+            console.log("QML: Layer image file selected:", filePath)
+            var imageItem = imageComponent.createObject(imageContainer, {
+                x: 50,
+                y: 50,
+                source: filePath
+            })
+            mainWindow.addItemToModel(imageItem)
+            mainWindow.selectItem(imageItem)
+        }
+    }
+
     ListModel {
         id: itemsModel
     }
@@ -28,8 +63,16 @@ ApplicationWindow {
     FileDialog {
         id: fileDialog
         title: "Select an image"
-        currentFolder: StandardPaths.standardLocations(StandardPaths.PicturesLocation)[0]
+        fileMode: FileDialog.OpenFile
         nameFilters: ["Image files (*.png *.jpg *.jpeg *.bmp *.webp)"]
+
+        Component.onCompleted: {
+            // Only set currentFolder for non-WASM platforms
+            if (Qt.platform.os !== "wasm") {
+                currentFolder = StandardPaths.standardLocations(StandardPaths.PicturesLocation)[0]
+            }
+        }
+
         onAccepted: {
             mainWindow.currentImageSource = selectedFile
             imageContainer.visible = true
@@ -98,7 +141,16 @@ ApplicationWindow {
                 Button {
                     Layout.fillWidth: true
                     text: "Upload Image"
-                    onClicked: fileDialog.open()
+                    onClicked: {
+                        console.log("Upload button clicked, platform:", Qt.platform.os)
+                        if (Qt.platform.os === "wasm") {
+                            console.log("Using FileHandler")
+                            FileHandler.openFileDialog()
+                        } else {
+                            console.log("Using native file dialog")
+                            fileDialog.open()
+                        }
+                    }
                 }
 
                 Button {
@@ -106,8 +158,12 @@ ApplicationWindow {
                     text: "Save Image"
                     enabled: mainWindow.currentImageSource !== ""
                     onClicked: {
-                        saveFileDialog.generateFileName()
-                        saveFileDialog.open()
+                        if (Qt.platform.os === "wasm") {
+                            ImageExporter.openSaveDialog(imageContainer)
+                        } else {
+                            saveFileDialog.generateFileName()
+                            saveFileDialog.open()
+                        }
                     }
                 }
 
@@ -129,7 +185,13 @@ ApplicationWindow {
                     Layout.fillWidth: true
                     text: "Add Image Layer"
                     enabled: mainWindow.currentImageSource !== ""
-                    onClicked: layerImageDialog.open()
+                    onClicked: {
+                        if (Qt.platform.os === "wasm") {
+                            FileHandler.openLayerImageDialog()
+                        } else {
+                            layerImageDialog.open()
+                        }
+                    }
                 }
 
                 RowLayout {

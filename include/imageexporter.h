@@ -18,10 +18,15 @@ public:
 
 public slots:
     void saveImage(QQuickItem* imageContainer, const QUrl& fileUrl);
+    void openSaveDialog(QQuickItem* imageContainer);
+
+signals:
+    void saveFileSelected(const QString& fileName);
 
 private:
     explicit ImageExporter(QObject *parent = nullptr);
     static ImageExporter* m_instance;
+    QQuickItem* m_pendingImageContainer;
 };
 
 #endif // IMAGEEXPORTER_H
