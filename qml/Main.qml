@@ -595,7 +595,6 @@ ApplicationWindow {
                 font.family: "Arial"
                 font.pixelSize: 24
                 color: "white"
-                //selectByMouse: false
                 wrapMode: TextEdit.Wrap
             }
 
@@ -603,6 +602,7 @@ ApplicationWindow {
                 anchors.fill: parent
                 anchors.rightMargin: 8
                 anchors.bottomMargin: 8
+                anchors.topMargin: 15 // Leave space for rotation handle
                 drag.target: parent
 
                 onPressed: {
@@ -611,7 +611,58 @@ ApplicationWindow {
 
                 onDoubleClicked: {
                     textEdit.focus = true
-                    //textEdit.selectAll()
+                }
+            }
+
+            // Rotation handle for text component
+            MouseArea {
+                id: rotationHandle
+                width: 12
+                height: 12
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.top: parent.top
+                anchors.topMargin: -6
+                visible: parent.selected
+                cursorShape: Qt.OpenHandCursor
+
+                property real centerX
+                property real centerY
+                property real startAngle
+
+                onPressed: {
+                    // Get the center point of the text item in global coordinates
+                    var globalCenter = textRect.mapToItem(textRect.parent, textRect.width/2, textRect.height/2)
+                    centerX = globalCenter.x
+                    centerY = globalCenter.y
+
+                    // Calculate initial angle from center to mouse position
+                    var globalMouse = mapToItem(textRect.parent, mouseX, mouseY)
+                    startAngle = Math.atan2(globalMouse.y - centerY, globalMouse.x - centerX) * 180 / Math.PI - textRect.rotation
+
+                    cursorShape = Qt.ClosedHandCursor
+                }
+
+                onReleased: {
+                    cursorShape = Qt.OpenHandCursor
+                }
+
+                onPositionChanged: {
+                    if (pressed) {
+                        // Calculate current angle from center to mouse position
+                        var globalMouse = mapToItem(textRect.parent, mouseX, mouseY)
+                        var currentAngle = Math.atan2(globalMouse.y - centerY, globalMouse.x - centerX) * 180 / Math.PI
+
+                        // Set rotation based on angle difference
+                        textRect.rotation = currentAngle - startAngle
+                    }
+                }
+
+                Rectangle {
+                    anchors.fill: parent
+                    radius: width / 2
+                    color: "#007acc"
+                    border.color: "#ffffff"
+                    border.width: 1
                 }
             }
 
@@ -692,10 +743,63 @@ ApplicationWindow {
                 anchors.fill: parent
                 anchors.rightMargin: 8
                 anchors.bottomMargin: 8
+                anchors.topMargin: 15 // Leave space for rotation handle
                 drag.target: parent
 
                 onPressed: {
                     mainWindow.selectItem(imageRect)
+                }
+            }
+
+            // Rotation handle for image component
+            MouseArea {
+                id: rotationHandle
+                width: 12
+                height: 12
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.top: parent.top
+                anchors.topMargin: -6
+                visible: parent.selected
+                cursorShape: Qt.OpenHandCursor
+
+                property real centerX
+                property real centerY
+                property real startAngle
+
+                onPressed: {
+                    // Get the center point of the image item in global coordinates
+                    var globalCenter = imageRect.mapToItem(imageRect.parent, imageRect.width/2, imageRect.height/2)
+                    centerX = globalCenter.x
+                    centerY = globalCenter.y
+
+                    // Calculate initial angle from center to mouse position
+                    var globalMouse = mapToItem(imageRect.parent, mouseX, mouseY)
+                    startAngle = Math.atan2(globalMouse.y - centerY, globalMouse.x - centerX) * 180 / Math.PI - imageRect.imageRotation
+
+                    cursorShape = Qt.ClosedHandCursor
+                }
+
+                onReleased: {
+                    cursorShape = Qt.OpenHandCursor
+                }
+
+                onPositionChanged: {
+                    if (pressed) {
+                        // Calculate current angle from center to mouse position
+                        var globalMouse = mapToItem(imageRect.parent, mouseX, mouseY)
+                        var currentAngle = Math.atan2(globalMouse.y - centerY, globalMouse.x - centerX) * 180 / Math.PI
+
+                        // Set rotation based on angle difference
+                        imageRect.imageRotation = currentAngle - startAngle
+                    }
+                }
+
+                Rectangle {
+                    anchors.fill: parent
+                    radius: width / 2
+                    color: "#007acc"
+                    border.color: "#ffffff"
+                    border.width: 1
                 }
             }
 
