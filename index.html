@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Odizinne</title>
+    <style>
+      :root {
+        --background: #f5f5f5;
+        --text-primary: #424242;
+        --text-secondary: #757575;
+        --spinner-color: #f25327;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --background: #121212;
+          --text-primary: #ffffff;
+          --text-secondary: #b0b0b0;
+          --spinner-color: #e68a8a;
+        }
+      }
+
+      html, body { 
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      #screen {
+        width: 100%;
+        height: 100%;
+        display: none;
+      }
+
+      #qtspinner {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: var(--background);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .loading-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .loader {
+        width: 48px;
+        height: 48px;
+        border: 4px solid var(--spinner-color);
+        border-radius: 50%;
+        position: relative;
+        animation: rotation 1s linear infinite;
+      }
+
+      /* Media query for smaller devices */
+      @media (max-width: 850px) {
+        .loader {
+          width: 64px;
+          height: 64px;
+          border-width: 5px;
+        }
+
+        .loader::after {
+          width: 54px;
+          height: 54px;
+          border-width: 5px;
+        }
+
+        .loading-text {
+          font-size: 24px !important;
+        }
+
+        #qtstatus {
+          font-size: 18px !important;
+        }
+      }
+
+      .loader::after {
+        content: '';
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 4px solid transparent;
+        border-bottom-color: var(--spinner-color);
+      }
+
+      @keyframes rotation {
+        0% { transform: rotate(0deg) }
+        100% { transform: rotate(360deg) }
+      }
+
+      .loading-text {
+        margin-top: 20px;
+        color: var(--text-primary);
+        font-size: 18px;
+        text-align: center;
+      }
+
+      #qtstatus {
+        margin-top: 10px;
+        color: var(--text-secondary);
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body onload="init()">
+    <div id="qtspinner">
+      <div class="loading-content">
+        <div class="loader"></div>
+        <div id="qtstatus"></div>
+      </div>
+    </div>
+    <div id="screen"></div>
+
+    <script type="text/javascript">
+        async function init() {
+            const spinner = document.querySelector('#qtspinner');
+            const screen = document.querySelector('#screen');
+            const status = document.querySelector('#qtstatus');
+
+            const showUi = (ui) => {
+                spinner.style.display = ui === spinner ? 'flex' : 'none';
+                screen.style.display = ui === screen ? 'block' : 'none';
+            }
+
+            try {
+                showUi(spinner);
+                status.textContent = 'Initializing...';
+
+                const instance = await qtLoad({
+                    qt: {
+                        onLoaded: () => showUi(screen),
+                        onExit: exitData => {
+                            status.textContent = `Application exit${
+                                exitData.code !== undefined ? ` with code ${exitData.code}` : ''
+                            }${
+                                exitData.text !== undefined ? ` (${exitData.text})` : ''
+                            }`;
+                            showUi(spinner);
+                        },
+                        entryFunction: window.Odizinne_entry,
+                        containerElements: [screen]
+                    }
+                });
+            } catch (e) {
+                console.error(e);
+                status.textContent = 'Failed to load application';
+            }
+        }
+    </script>
+    <script src="Odizinne.js"></script>
+    <script type="text/javascript" src="qtloader.js"></script>
+  </body>
+</html>
