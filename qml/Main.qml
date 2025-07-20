@@ -310,13 +310,11 @@ ApplicationWindow {
                         }
                     }
 
-                    Label { text: "Text Color:" }
-
                     Button {
                         id: colorButton
                         Layout.fillWidth: true
                         Layout.preferredHeight: 40
-                        text: "Custom Color"
+                        text: "Text Color"
                         onClicked: {
                             colorDialog.selectedColor = colorPicker.selectedColor
                             colorDialog.currentColor = colorPicker.selectedColor

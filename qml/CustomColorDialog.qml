@@ -45,16 +45,16 @@ Dialog {
                 Layout.preferredHeight: width
                 color: "#ff0000"
 
-                // Black to transparent overlay for value (top to bottom)
+                // Black to transparent overlay for value (top to bottom - REVERTED)
                 Rectangle {
                     anchors.fill: parent
                     gradient: Gradient {
-                        GradientStop { position: 0.0; color: "#00000000" }
-                        GradientStop { position: 1.0; color: "#ff000000" }
+                        GradientStop { position: 0.0; color: "#00000000" }  // Transparent at top
+                        GradientStop { position: 1.0; color: "#ff000000" }  // Black at bottom
                     }
                 }
 
-                // White to transparent overlay for saturation (left to right, INVERTED)
+                // White to transparent overlay for saturation (right to left - KEPT)
                 Rectangle {
                     anchors.fill: parent
                     gradient: Gradient {
@@ -77,15 +77,6 @@ Dialog {
 
                     onXChanged: root.updateColorFromCursors()
                     onYChanged: root.updateColorFromCursors()
-
-                    Rectangle {
-                        anchors.fill: parent
-                        anchors.margins: 2
-                        radius: 4
-                        color: "transparent"
-                        border.color: "black"
-                        border.width: 1
-                    }
 
                     MouseArea {
                         anchors.fill: parent
