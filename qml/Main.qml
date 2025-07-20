@@ -317,7 +317,11 @@ ApplicationWindow {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 40
                         text: "Custom Color"
-                        onClicked: colorDialog.open()
+                        onClicked: {
+                            colorDialog.selectedColor = colorPicker.selectedColor
+                            colorDialog.currentColor = colorPicker.selectedColor
+                            colorDialog.open()
+                        }
 
                         // Calculate text color based on background brightness
                         property real backgroundLuminance: 0.299 * colorPicker.selectedColor.r +
@@ -887,11 +891,11 @@ ApplicationWindow {
         }
     }
 
-    ColorDialog {
+    CustomColorDialog {
         id: colorDialog
-        title: "Choose text color"
-        onAccepted: {
-            colorPicker.selectedColor = colorDialog.selectedColor
+        selectedColor: colorPicker.selectedColor
+        onColorAccepted: {
+            colorPicker.selectedColor = selectedColor
         }
     }
 
