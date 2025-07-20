@@ -1,20 +1,21 @@
 pragma ComponentBehavior: Bound
-
 import QtQuick
 
 Rectangle {
     id: root
-    height: 120
+    height: Math.ceil(repeater.count / grid.columns) * (25 + grid.spacing) - grid.spacing
     color: "transparent"
 
     property color selectedColor: "black"
 
     Grid {
+        id: grid
         anchors.fill: parent
         columns: 8
         spacing: 2
 
         Repeater {
+            id: repeater
             model: ListModel {
                 ListElement { color: "#000000" }
                 ListElement { color: "#333333" }
@@ -43,13 +44,14 @@ Rectangle {
             }
 
             Rectangle {
-                width: (root.width - 14) / 8
+                width: (root.width - (grid.columns - 1) * grid.spacing) / grid.columns
                 height: 25
                 color: model.color
                 border.color: "#999"
                 border.width: 1
 
                 required property var model
+
                 MouseArea {
                     anchors.fill: parent
                     onClicked: {
