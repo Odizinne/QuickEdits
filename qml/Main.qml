@@ -11,7 +11,9 @@ ApplicationWindow {
     id: mainWindow
     visible: true
     width: 1400
-    height: 800
+    height: 805
+    minimumWidth: 1400
+    minimumHeight: 805
     title: "QuickEdits"
     Universal.theme: Universal.Dark
 
@@ -285,6 +287,17 @@ ApplicationWindow {
                     }
 
                     Button {
+                        id: textResetBtn
+                        text: "Reset rotation"
+                        Layout.fillWidth: true
+                        onClicked: {
+                            if (mainWindow.selectedTextItem) {
+                                mainWindow.selectedTextItem.textRotation = 0
+                            }
+                        }
+                    }
+
+                    Button {
                         Layout.fillWidth: true
                         text: "Delete Selected Item"
                         enabled: mainWindow.selectedTextItem !== null
@@ -308,46 +321,16 @@ ApplicationWindow {
                 }
 
                 ColumnLayout {
-                    //anchors.fill: parent
                     spacing: 10
                     visible: mainWindow.selectedTextItem !== null && !mainWindow.selectedTextItem.hasOwnProperty('textContent')
 
-                    Label { text: "Rotate Image Layer:" }
-
-                    RowLayout {
-                        property int buttonWidth: Math.max(imgLeftBtn.implicitHeight, imgRightBtn.implicitHeight, imgResetBtn.implicitHeight)
-
-                        Button {
-                            id: imgLeftBtn
-                            text: "↺ Left"
-                            Layout.fillWidth: true
-                            Layout.preferredWidth: parent.buttonWidth
-                            onClicked: {
-                                if (mainWindow.selectedTextItem) {
-                                    mainWindow.selectedTextItem.imageRotation -= 90
-                                }
-                            }
-                        }
-                        Button {
-                            id: imgRightBtn
-                            text: "↻ Right"
-                            Layout.fillWidth: true
-                            Layout.preferredWidth: parent.buttonWidth
-                            onClicked: {
-                                if (mainWindow.selectedTextItem) {
-                                    mainWindow.selectedTextItem.imageRotation += 90
-                                }
-                            }
-                        }
-                        Button {
-                            id: imgResetBtn
-                            text: "Reset"
-                            Layout.fillWidth: true
-                            Layout.preferredWidth: parent.buttonWidth
-                            onClicked: {
-                                if (mainWindow.selectedTextItem) {
-                                    mainWindow.selectedTextItem.imageRotation = 0
-                                }
+                    Button {
+                        id: imgResetBtn
+                        text: "Reset rotation"
+                        Layout.fillWidth: true
+                        onClicked: {
+                            if (mainWindow.selectedTextItem) {
+                                mainWindow.selectedTextItem.imageRotation = 0
                             }
                         }
                     }
