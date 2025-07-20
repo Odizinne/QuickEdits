@@ -91,7 +91,7 @@ ApplicationWindow {
 
                 Button {
                     Layout.fillWidth: true
-                    text: "Add Text"
+                    text: "Add Text Layer"
                     enabled: mainWindow.currentImageSource !== ""
                     onClicked: {
                         var textItem = textComponent.createObject(imageContainer, {
@@ -161,15 +161,18 @@ ApplicationWindow {
 
 
                     Label { text: "Text Content:" }
-                    TextArea {
-                        id: textContent
+                    ScrollView {
                         Layout.fillWidth: true
-                        Layout.preferredHeight: 60
-                        wrapMode: TextArea.Wrap
-                        onTextChanged: {
-                            if (mainWindow.selectedTextItem && mainWindow.selectedTextItem.hasOwnProperty('textContent')) {
-                                mainWindow.selectedTextItem.textContent = text
-                                mainWindow.updateItemPreview(mainWindow.selectedTextItem)
+                        Layout.preferredHeight: 100
+
+                        TextArea {
+                            id: textContent
+                            wrapMode: TextArea.Wrap
+                            onTextChanged: {
+                                if (mainWindow.selectedTextItem && mainWindow.selectedTextItem.hasOwnProperty('textContent')) {
+                                    mainWindow.selectedTextItem.textContent = text
+                                    mainWindow.updateItemPreview(mainWindow.selectedTextItem)
+                                }
                             }
                         }
                     }
@@ -258,12 +261,6 @@ ApplicationWindow {
                         onSelectedColorChanged: {
                             if (mainWindow.selectedTextItem && mainWindow.selectedTextItem.hasOwnProperty('textColor'))
                             mainWindow.selectedTextItem.textColor = selectedColor
-                        }
-                        Rectangle {
-                            anchors.fill: parent
-                            color: "transparent"
-                            border.width: 1
-                            border.color: "red"
                         }
                     }
 
@@ -369,7 +366,7 @@ ApplicationWindow {
                     source: mainWindow.currentImageSource
                     fillMode: Image.PreserveAspectFit
                     rotation: mainWindow.imageRotation
-                    //z: -1000  // Background image always behind everything
+                    z: -1000
 
                     MouseArea {
                         anchors.fill: parent
@@ -397,6 +394,9 @@ ApplicationWindow {
 
             Label {
                 text: "Import an image to start"
+                opacity: 0.5
+                font.pixelSize: 18
+
                 anchors.centerIn: parent
                 visible: mainWindow.currentImageSource === ""
             }
@@ -411,106 +411,112 @@ ApplicationWindow {
                 anchors.fill: parent
                 spacing: 10
 
-                Label {
-                    text: "Layers"
-                    font.bold: true
-                }
-
                 ScrollView {
+                    id: lyrScroll
                     Layout.fillWidth: true
                     Layout.fillHeight: true
+                    ScrollBar.vertical.policy: itemListView.contentHeight > height ? ScrollBar.AlwaysOn : ScrollBar.AlwaysOff
 
+                    property bool sbVisible: ScrollBar.vertical.policy === ScrollBar.AlwaysOn
                     ListView {
                         id: itemListView
                         model: itemsModel
+                        spacing: 8
 
-                        delegate: Rectangle {
-                            id: rightRect
-                            width: itemListView.width
-                            height: 100
-                            color: model.isSelected ? "#40007acc" : "transparent"
-                            border.color: model.isSelected ? "#007acc" : "#333"
-                            border.width: 1
+                        delegate: Item {
+                            id: delegateRoot
+                            width: lyrScroll.sbVisible ? itemListView.width - 20 : itemListView.width
+                            height: 70
 
                             required property var model
                             required property int index
 
-                            ColumnLayout {
+                            RowLayout {
                                 anchors.fill: parent
-                                anchors.margins: 8
                                 spacing: 4
 
-                                MouseArea {
+                                Rectangle {
+                                    id: rightRect
                                     Layout.fillWidth: true
                                     Layout.fillHeight: true
-                                    acceptedButtons: Qt.LeftButton | Qt.RightButton
+                                    color: delegateRoot.model.isSelected ? "#40007acc" : "transparent"
+                                    border.color: delegateRoot.model.isSelected ? "#007acc" : "#333"
+                                    border.width: 2
 
-                                    onClicked: function(mouse) {
-                                        if (mouse.button === Qt.LeftButton) {
-                                            mainWindow.selectItem(rightRect.model.item)
-                                        } else if (mouse.button === Qt.RightButton) {
-                                            contextMenu.itemToDelete = rightRect.model.item
-                                            contextMenu.popup()
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        acceptedButtons: Qt.LeftButton | Qt.RightButton
+
+                                        onClicked: function(mouse) {
+                                            if (mouse.button === Qt.LeftButton) {
+                                                mainWindow.selectItem(delegateRoot.model.item)
+                                            } else if (mouse.button === Qt.RightButton) {
+                                                contextMenu.itemToDelete = delegateRoot.model.item
+                                                contextMenu.popup()
+                                            }
+                                        }
+
+                                        Menu {
+                                            id: contextMenu
+                                            property var itemToDelete: null
+
+                                            MenuItem {
+                                                text: "Delete"
+                                                onTriggered: {
+                                                    if (contextMenu.itemToDelete) {
+                                                        mainWindow.deleteItem(contextMenu.itemToDelete)
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
 
                                     ColumnLayout {
                                         anchors.fill: parent
+                                        anchors.margins: 8
                                         spacing: 4
 
                                         Text {
                                             Layout.fillWidth: true
-                                            text: rightRect.model.preview
+                                            text: delegateRoot.model.preview
                                             color: Universal.foreground
-                                            font.weight: rightRect.model.isSelected ? Font.Bold : Font.Normal
+                                            font.weight: delegateRoot.model.isSelected ? Font.Bold : Font.Normal
                                             elide: Text.ElideRight
                                         }
 
                                         Text {
                                             Layout.fillWidth: true
-                                            text: rightRect.model.type + " - " + rightRect.model.details
+                                            text: delegateRoot.model.type + " - " + delegateRoot.model.details
                                             color: Universal.accent
                                             font.pixelSize: 10
                                         }
                                     }
-
-                                    Menu {
-                                        id: contextMenu
-                                        property var itemToDelete: null
-
-                                        MenuItem {
-                                            text: "Delete"
-                                            onTriggered: {
-                                                if (contextMenu.itemToDelete) {
-                                                    mainWindow.deleteItem(contextMenu.itemToDelete)
-                                                }
-                                            }
-                                        }
-                                    }
                                 }
 
-                                RowLayout {
-                                    Layout.fillWidth: true
+                                ColumnLayout {
+                                    Layout.preferredWidth: 35
+                                    Layout.fillHeight: true
+                                    spacing: 2
 
-                                    Label {
-                                        text: "Layer:"
-                                        color: Universal.accent
-                                        font.pixelSize: 10
+                                    Button {
+                                        Layout.preferredHeight: 25
+                                        text: "▲"
+                                        enabled: delegateRoot.index > 0
+                                        font.pixelSize: 8
+
+                                        onClicked: {
+                                            mainWindow.moveItemUp(delegateRoot.model.item)
+                                        }
                                     }
 
-                                    SpinBox {
-                                        Layout.fillWidth: true
+                                    Button {
                                         Layout.preferredHeight: 25
-                                        from: 1
-                                        to: 100
-                                        value: rightRect.model.item ? rightRect.model.item.itemLayer : 1
-                                        font.pixelSize: 10
+                                        text: "▼"
+                                        enabled: delegateRoot.index < itemsModel.count - 1
+                                        font.pixelSize: 8
 
-                                        onValueChanged: {
-                                            if (rightRect.model.item) {
-                                                rightRect.model.item.itemLayer = value
-                                                itemsModel.setProperty(rightRect.index, "layer", value)
-                                            }
+                                        onClicked: {
+                                            mainWindow.moveItemDown(delegateRoot.model.item)
                                         }
                                     }
                                 }
@@ -518,6 +524,14 @@ ApplicationWindow {
                         }
                     }
                 }
+            }
+
+            Label {
+                text: "Layers"
+                font.pixelSize: 18
+                opacity: 0.5
+                anchors.centerIn: parent
+                visible: itemsModel.count === 0
             }
         }
     }
@@ -561,7 +575,7 @@ ApplicationWindow {
                 font.family: "Arial"
                 font.pixelSize: 24
                 color: "white"
-                selectByMouse: true
+                //selectByMouse: false
                 wrapMode: TextEdit.Wrap
             }
 
@@ -577,7 +591,7 @@ ApplicationWindow {
 
                 onDoubleClicked: {
                     textEdit.focus = true
-                    textEdit.selectAll()
+                    //textEdit.selectAll()
                 }
             }
 
@@ -712,6 +726,64 @@ ApplicationWindow {
         }
     }
 
+    function moveItemUp(item) {
+        var currentIndex = -1
+
+        // Find current index
+        for (var i = 0; i < itemsModel.count; i++) {
+            if (itemsModel.get(i).item === item) {
+                currentIndex = i
+                break
+            }
+        }
+
+        if (currentIndex > 0) {
+            // Swap with item above
+            var itemAbove = itemsModel.get(currentIndex - 1)
+            var currentItem = itemsModel.get(currentIndex)
+
+            var tempLayer = itemAbove.layer
+            itemAbove.item.itemLayer = currentItem.layer
+            currentItem.item.itemLayer = tempLayer
+
+            // Update model
+            itemsModel.setProperty(currentIndex - 1, "layer", currentItem.layer)
+            itemsModel.setProperty(currentIndex, "layer", tempLayer)
+
+            // Move in model (swap positions)
+            itemsModel.move(currentIndex, currentIndex - 1, 1)
+        }
+    }
+
+    function moveItemDown(item) {
+        var currentIndex = -1
+
+        // Find current index
+        for (var i = 0; i < itemsModel.count; i++) {
+            if (itemsModel.get(i).item === item) {
+                currentIndex = i
+                break
+            }
+        }
+
+        if (currentIndex < itemsModel.count - 1 && currentIndex >= 0) {
+            // Swap with item below
+            var itemBelow = itemsModel.get(currentIndex + 1)
+            var currentItem = itemsModel.get(currentIndex)
+
+            var tempLayer = itemBelow.layer
+            itemBelow.item.itemLayer = currentItem.layer
+            currentItem.item.itemLayer = tempLayer
+
+            // Update model
+            itemsModel.setProperty(currentIndex + 1, "layer", currentItem.layer)
+            itemsModel.setProperty(currentIndex, "layer", tempLayer)
+
+            // Move in model (swap positions)
+            itemsModel.move(currentIndex, currentIndex + 1, 1)
+        }
+    }
+
     function addItemToModel(item) {
         var preview, type, details
 
@@ -743,17 +815,18 @@ ApplicationWindow {
         var newLayer = highestZ + 1
         item.itemLayer = newLayer
 
-        itemsModel.append({
-                              item: item,
-                              preview: preview || "Empty",
-                              type: type,
-                              details: details,
-                              layer: newLayer,
-                              isSelected: true
-                          })
+        // Insert at the beginning (top of list = highest z)
+        itemsModel.insert(0, {
+            item: item,
+            preview: preview || "Empty",
+            type: type,
+            details: details,
+            layer: newLayer,
+            isSelected: true
+        })
 
         // Deselect all other items
-        for (var j = 0; j < itemsModel.count - 1; j++) {
+        for (var j = 1; j < itemsModel.count; j++) {
             itemsModel.setProperty(j, "isSelected", false)
         }
     }
