@@ -16,7 +16,7 @@ ApplicationWindow {
     minimumHeight: 805
     title: "QuickEdits"
     Material.theme: Material.Dark
-    color: "#1C1C1C"
+    color: "#191919"
 
     property string currentImageSource: ""
     property var selectedTextItem: null
