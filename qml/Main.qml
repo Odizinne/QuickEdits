@@ -801,26 +801,27 @@ ApplicationWindow {
             property real imageRotation: 0
             property bool selected: false
 
-            // Selection border
+            // Container that rotates with the content
             Item {
+                id: rotatingContainer
                 anchors.fill: parent
-                visible: parent.selected
+                anchors.margins: 2
+                rotation: imageRect.imageRotation
 
+                // Selection border - now rotates with content
                 Rectangle {
                     anchors.fill: parent
-                    color: "#40F48FB1"
-                    border.width: 2
+                    color: imageRect.selected ? "#40F48FB1" : "transparent"
+                    border.width: imageRect.selected ? 2 : 0
                     border.color: "#F48FB1"
                     radius: Material.ExtraSmallScale
                 }
-            }
 
-            Image {
-                id: layerImage
-                anchors.fill: parent
-                anchors.margins: 2
-                fillMode: Image.PreserveAspectFit
-                rotation: imageRect.imageRotation
+                Image {
+                    id: layerImage
+                    anchors.fill: parent
+                    fillMode: Image.PreserveAspectFit
+                }
             }
 
             MouseArea {
