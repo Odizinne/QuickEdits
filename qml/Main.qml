@@ -127,8 +127,8 @@ ApplicationWindow {
 
     RowLayout {
         anchors.fill: parent
-        anchors.margins: 12
-        spacing: 12
+        anchors.margins: 15
+        spacing: 15
 
         // Left panel - controls
         Pane {
@@ -331,7 +331,7 @@ ApplicationWindow {
                                                            0.587 * colorPicker.selectedColor.g +
                                                            0.114 * colorPicker.selectedColor.b
 
-                        contentItem: Text {
+                        contentItem: Label {
                             text: colorButton.text
                             font: colorButton.font
                             color: colorButton.backgroundLuminance > 0.5 ? "#000000" : "#ffffff"
@@ -668,6 +668,10 @@ ApplicationWindow {
                 anchors.bottomMargin: 8
                 anchors.topMargin: 15 // Leave space for rotation handle
                 drag.target: parent
+                drag.minimumX: 0
+                drag.maximumX: imageContainer.width - parent.width
+                drag.minimumY: 0
+                drag.maximumY: imageContainer.height - parent.height
 
                 onPressed: {
                     mainWindow.selectItem(textRect)
@@ -811,6 +815,10 @@ ApplicationWindow {
                 anchors.bottomMargin: 8
                 anchors.topMargin: 15 // Leave space for rotation handle
                 drag.target: parent
+                drag.minimumX: 0
+                drag.maximumX: imageContainer.width - parent.width
+                drag.minimumY: 0
+                drag.maximumY: imageContainer.height - parent.height
 
                 onPressed: {
                     mainWindow.selectItem(imageRect)

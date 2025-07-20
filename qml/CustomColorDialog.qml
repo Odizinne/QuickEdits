@@ -9,6 +9,7 @@ Dialog {
     modal: true
     width: 350
     anchors.centerIn: parent
+    Material.roundedScale: Material.ExtraSmallScale
 
     property color selectedColor: "white"
     property color currentColor: "white"
@@ -82,11 +83,11 @@ Dialog {
 
                 Rectangle {
                     id: svCursor
-                    width: 16
-                    height: 16
-                    radius: 8
-                    color: "white"
-                    border.color: "black"
+                    width: 18
+                    height: 18
+                    radius: width / 2
+                    color: root.currentColor
+                    border.color: "#ffffff"
                     border.width: 2
                     x: parent.width - width
                     y: 0
@@ -124,27 +125,32 @@ Dialog {
             // Vertical hue gradient bar
             Rectangle {
                 radius: Material.ExtraSmallScale
-                Layout.preferredWidth: 20
+                Layout.preferredWidth: 10
                 Layout.fillHeight: true
 
                 gradient: Gradient {
                     GradientStop { position: 0.0; color: "#ff0000" }
-                    GradientStop { position: 0.16; color: "#ff00ff" }
-                    GradientStop { position: 0.33; color: "#0000ff" }
+                    GradientStop { position: 0.17; color: "#ffff00" }
+                    GradientStop { position: 0.34; color: "#00ff00" }
                     GradientStop { position: 0.5; color: "#00ffff" }
-                    GradientStop { position: 0.66; color: "#00ff00" }
-                    GradientStop { position: 0.83; color: "#ffff00" }
+                    GradientStop { position: 0.67; color: "#0000ff" }
+                    GradientStop { position: 0.84; color: "#ff00ff" }
                     GradientStop { position: 1.0; color: "#ff0000" }
                 }
 
                 Rectangle {
-                    radius: Material.ExtraSmallScale
                     id: hueCursor
-                    width: parent.width
-                    height: 8
-                    color: "white"
-                    border.color: "black"
-                    border.width: 1
+                    width: 18
+                    height: 18
+                    radius: width / 2
+                    color: {
+                        // Get current hue value
+                        var currentHue = y / (parent.height - height)
+                        return Qt.hsva(currentHue, 1, 1, 1)  // Max saturation and value
+                    }
+                    border.color: "#ffffff"
+                    border.width: 2
+                    x: (parent.width - width) / 2  // Center horizontally
                     y: 0
 
                     onYChanged: root.updateColorFromCursors()
