@@ -571,7 +571,7 @@ ApplicationWindow {
                 anchors.bottomMargin: 8
                 drag.target: parent
 
-                onClicked: {
+                onPressed: {
                     mainWindow.selectItem(textRect)
                 }
 
@@ -660,7 +660,7 @@ ApplicationWindow {
                 anchors.bottomMargin: 8
                 drag.target: parent
 
-                onClicked: {
+                onPressed: {
                     mainWindow.selectItem(imageRect)
                 }
             }
