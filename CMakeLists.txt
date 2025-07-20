@@ -4,6 +4,7 @@ project(QuickEdits VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH "Installation directory" FORCE)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_AUTORCC ON)
 
 find_package(Qt6 REQUIRED COMPONENTS
     Quick
@@ -33,6 +34,7 @@ set(QML_FILES
 qt_add_executable(${CMAKE_PROJECT_NAME}
     ${SOURCES}
     ${HEADERS}
+    resources/fonts/fonts.qrc
 )
 
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE

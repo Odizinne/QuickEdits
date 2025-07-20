@@ -139,7 +139,25 @@ ApplicationWindow {
         }
     }
 
-    Component.onCompleted: mainLyt.opacity = 1
+    Component.onCompleted: {
+        mainLyt.opacity = 1
+        Qt.fontFamilies()
+    }
+
+    FontLoader {
+        id: customFont1
+        source: "qrc:/fonts/RUNE.ttf"
+    }
+
+    FontLoader {
+        id: customFont2
+        source: "qrc:/fonts/CloisterBlack.ttf"
+    }
+
+    FontLoader {
+        id: customFont3
+        source: "qrc:/fonts/MessySketch-Regular.ttf"
+    }
 
     RowLayout {
         id: mainLyt

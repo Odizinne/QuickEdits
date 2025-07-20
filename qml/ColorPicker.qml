@@ -6,6 +6,4 @@ Rectangle {
     color: "transparent"
 
     property color selectedColor: "black"
-
-
 }

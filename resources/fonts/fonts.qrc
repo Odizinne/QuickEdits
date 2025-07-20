@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/fonts">
+        <file>RUNE.ttf</file>
+        <file>CloisterBlack.ttf</file>
+        <file>MessySketch-Regular.ttf</file>
+    </qresource>
+</RCC>
