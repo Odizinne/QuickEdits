@@ -27,8 +27,9 @@ ApplicationWindow {
         function onSaveFileSelected(fileName) {
             console.log("QML: Save file selected:", fileName)
             if (Qt.platform.os === "wasm") {
-                // For WebAssembly, directly save with the selected name
-                ImageExporter.saveImage(imageContainer, fileName)
+                // For WebAssembly, show our custom naming dialog
+                saveNamingDialog.setFileName(fileName)
+                saveNamingDialog.open()
             } else {
                 // For native, open the save dialog with suggested name
                 saveFileDialog.currentFile = Qt.resolvedUrl(saveFileDialog.currentFolder + "/" + fileName)
@@ -59,6 +60,19 @@ ApplicationWindow {
 
     ListModel {
         id: itemsModel
+    }
+
+    SaveNamingDialog {
+        id: saveNamingDialog
+
+        onFileNameAccepted: function(fileName) {
+            console.log("QML: Save dialog accepted with filename:", fileName)
+            ImageExporter.saveImage(imageContainer, fileName)
+        }
+
+        onFileNameRejected: {
+            console.log("QML: Save dialog cancelled")
+        }
     }
 
     FileDialog {

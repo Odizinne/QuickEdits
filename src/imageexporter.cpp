@@ -58,27 +58,12 @@ void ImageExporter::openSaveDialog(QQuickItem* imageContainer)
     m_pendingImageContainer = imageContainer;
 
 #ifdef Q_OS_WASM
-    qDebug() << "Opening WebAssembly save dialog";
-    EM_ASM({
-        console.log("Opening save file dialog");
+    qDebug() << "Opening custom save dialog for WebAssembly";
+    // Generate a suggested filename based on current time
+    QString suggestedName = QString("quickedits_export_%1")
+                                .arg(QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss"));
 
-        // Create a temporary link to trigger download
-        var link = document.createElement('a');
-        link.download = 'quickedits_export.png';
-
-        // For now, we'll use a simple prompt for filename
-        var fileName = prompt("Enter filename (without extension):", "quickedits_export");
-        if (fileName) {
-            if (!fileName.endsWith('.png')) {
-                fileName += '.png';
-            }
-            var len = lengthBytesUTF8(fileName) + 1;
-            var ptr = _malloc(len);
-            stringToUTF8(fileName, ptr, len);
-            Module._saveFileSelectedCallback(ptr);
-            _free(ptr);
-        }
-    });
+    emit saveFileSelected(suggestedName);
 #else
     // For native platforms, emit with a default name - the QML will handle the FileDialog
     emit saveFileSelected("quickedits_export.png");
@@ -125,7 +110,23 @@ void ImageExporter::saveImage(QQuickItem* imageContainer, const QUrl& fileUrl)
         QBuffer buffer(&imageData);
         buffer.open(QIODevice::WriteOnly);
 
-        if (grabResult->image().save(&buffer, "PNG")) {
+        // Extract file extension to determine format
+        QString format = "PNG"; // default
+        QString mimeType = "image/png"; // default
+
+        QString lowerPath = filePath.toLower();
+        if (lowerPath.endsWith(".jpg") || lowerPath.endsWith(".jpeg")) {
+            format = "JPEG";
+            mimeType = "image/jpeg";
+        } else if (lowerPath.endsWith(".bmp")) {
+            format = "BMP";
+            mimeType = "image/bmp";
+        } else if (lowerPath.endsWith(".webp")) {
+            format = "WEBP";
+            mimeType = "image/webp";
+        }
+
+        if (grabResult->image().save(&buffer, format.toUtf8().constData())) {
             // Convert to base64 for JavaScript
             QString base64Data = imageData.toBase64();
 
@@ -141,8 +142,9 @@ void ImageExporter::saveImage(QQuickItem* imageContainer, const QUrl& fileUrl)
             EM_ASM({
                 var base64Data = UTF8ToString($0);
                 var fileName = UTF8ToString($1);
+                var mimeType = UTF8ToString($2);
 
-                console.log("Downloading file as:", fileName);
+                console.log("Downloading file as:", fileName, "with mime type:", mimeType);
 
                 // Convert base64 to blob
                 var byteCharacters = atob(base64Data);
@@ -151,7 +153,7 @@ void ImageExporter::saveImage(QQuickItem* imageContainer, const QUrl& fileUrl)
                     byteNumbers[i] = byteCharacters.charCodeAt(i);
                 }
                 var byteArray = new Uint8Array(byteNumbers);
-                var blob = new Blob([byteArray], {type: 'image/png'});
+                var blob = new Blob([byteArray], {type: mimeType});
 
                 // Create download link
                 var link = document.createElement('a');
@@ -161,18 +163,29 @@ void ImageExporter::saveImage(QQuickItem* imageContainer, const QUrl& fileUrl)
                 link.click();
                 document.body.removeChild(link);
                 URL.revokeObjectURL(link.href);
-            }, base64Data.toUtf8().constData(), fileName.toUtf8().constData());
+            }, base64Data.toUtf8().constData(), fileName.toUtf8().constData(), mimeType.toUtf8().constData());
 
-            qDebug() << "Image download initiated with filename:" << fileName;
+            qDebug() << "Image download initiated with filename:" << fileName << "format:" << format;
         } else {
-            qWarning() << "Failed to create image data for download";
+            qWarning() << "Failed to create image data for download in format:" << format;
         }
 #else
         // Native platforms: save to specified location
-        if (grabResult->saveToFile(filePath)) {
-            qDebug() << "Image saved successfully to:" << filePath;
+        // Extract format from file extension for native saving too
+        QString format = "PNG"; // default
+        QString lowerPath = filePath.toLower();
+        if (lowerPath.endsWith(".jpg") || lowerPath.endsWith(".jpeg")) {
+            format = "JPEG";
+        } else if (lowerPath.endsWith(".bmp")) {
+            format = "BMP";
+        } else if (lowerPath.endsWith(".webp")) {
+            format = "WEBP";
+        }
+
+        if (grabResult->image().save(filePath, format.toUtf8().constData())) {
+            qDebug() << "Image saved successfully to:" << filePath << "in format:" << format;
         } else {
-            qWarning() << "Failed to save image to:" << filePath;
+            qWarning() << "Failed to save image to:" << filePath << "in format:" << format;
         }
 #endif
     });
