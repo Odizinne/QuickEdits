@@ -12,7 +12,7 @@ ApplicationWindow {
     visible: true
     width: 1400
     height: 800
-    title: "Image Text Editor"
+    title: "QuickEdits"
     Universal.theme: Universal.Dark
 
     property string currentImageSource: ""
@@ -27,7 +27,7 @@ ApplicationWindow {
         id: fileDialog
         title: "Select an image"
         currentFolder: StandardPaths.standardLocations(StandardPaths.PicturesLocation)[0]
-        nameFilters: ["Image files (*.png *.jpg *.jpeg *.bmp *.gif)"]
+        nameFilters: ["Image files (*.png *.jpg *.jpeg *.bmp *.webp)"]
         onAccepted: {
             mainWindow.currentImageSource = selectedFile
             imageContainer.visible = true
@@ -38,7 +38,7 @@ ApplicationWindow {
         id: layerImageDialog
         title: "Select image for layer"
         currentFolder: StandardPaths.standardLocations(StandardPaths.PicturesLocation)[0]
-        nameFilters: ["Image files (*.png *.jpg *.jpeg *.bmp *.gif)"]
+        nameFilters: ["Image files (*.png *.jpg *.jpeg *.bmp *.webp)"]
         onAccepted: {
             var imageItem = imageComponent.createObject(imageContainer, {
                 x: 50,
@@ -55,8 +55,25 @@ ApplicationWindow {
         title: "Save image as..."
         fileMode: FileDialog.SaveFile
         currentFolder: StandardPaths.standardLocations(StandardPaths.PicturesLocation)[0]
-        nameFilters: ["PNG files (*.png)", "JPEG files (*.jpg)", "All files (*)"]
+        nameFilters: ["PNG files (*.png)", "JPEG files (*.jpg *.jpeg)", "BMP files (*.bmp)", "WebP files (*.webp)", "All files (*)"]
         defaultSuffix: "png"
+
+        Component.onCompleted: {
+            generateFileName()
+        }
+
+        function generateFileName() {
+            if (mainWindow.currentImageSource !== "") {
+                var sourcePath = mainWindow.currentImageSource.toString()
+                var fileName = sourcePath.split('/').pop() // Get filename
+                var nameWithoutExt = fileName.substring(0, fileName.lastIndexOf('.'))
+                var extension = fileName.substring(fileName.lastIndexOf('.'))
+
+                var newFileName = nameWithoutExt + "_edited" + extension
+                currentFile = Qt.resolvedUrl(currentFolder + "/" + newFileName)
+            }
+        }
+
         onAccepted: {
             ImageExporter.saveImage(imageContainer, selectedFile)
         }
@@ -86,7 +103,10 @@ ApplicationWindow {
                     Layout.fillWidth: true
                     text: "Save Image"
                     enabled: mainWindow.currentImageSource !== ""
-                    onClicked: saveFileDialog.open()
+                    onClicked: {
+                        saveFileDialog.generateFileName()
+                        saveFileDialog.open()
+                    }
                 }
 
                 Button {
@@ -232,7 +252,7 @@ ApplicationWindow {
                         id: colorButton
                         Layout.fillWidth: true
                         Layout.preferredHeight: 40
-                        text: "Choose Color"
+                        text: "Custom Color"
                         onClicked: colorDialog.open()
 
                         // Calculate text color based on background brightness
