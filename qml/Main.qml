@@ -807,6 +807,8 @@ ApplicationWindow {
                 WheelHandler {
                     acceptedModifiers: Qt.ControlModifier
                     onWheel: function(event) {
+                        if (Qt.platform.os === "wasm") return
+
                         if (event.angleDelta.y > 0) {
                             mainWindow.zoomIn()
                         } else {
