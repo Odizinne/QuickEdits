@@ -95,13 +95,24 @@ void ImageExporter::saveImage(QQuickItem* imageContainer, const QUrl& fileUrl)
         }
     }
 
+    bool originalBorderVisibility = true;
+
+    QQuickItem* imageBorder = imageContainer->findChild<QQuickItem*>("imageBorder");
+    if (imageBorder) {
+        originalBorderVisibility = imageBorder->isVisible();
+        imageBorder->setVisible(false);
+    }
     // Grab the image container without selections
     QSharedPointer<QQuickItemGrabResult> grabResult = imageContainer->grabToImage();
 
-    connect(grabResult.data(), &QQuickItemGrabResult::ready, [grabResult, filePath, textItems, originalSelectionStates]() {
-        // Restore original selection states first
+    connect(grabResult.data(), &QQuickItemGrabResult::ready, [grabResult, filePath, textItems, originalSelectionStates, imageBorder, originalBorderVisibility]() {
+        // Restore original selection states and border visibility
         for (int i = 0; i < textItems.size(); ++i) {
             textItems.at(i)->setProperty("selected", originalSelectionStates.at(i));
+        }
+
+        if (imageBorder) {
+            imageBorder->setVisible(originalBorderVisibility);
         }
 
 #ifdef Q_OS_WASM

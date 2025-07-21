@@ -917,6 +917,7 @@ ApplicationWindow {
 
                             // Border to show image bounds - fixed size
                             Rectangle {
+                                objectName: "imageBorder"
                                 anchors.fill: parent
                                 color: "transparent"
                                 border.width: 2 / mainWindow.zoomFactor
