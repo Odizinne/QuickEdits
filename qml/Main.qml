@@ -24,14 +24,6 @@ ApplicationWindow {
     property real maxZoom: 5.0
     property real zoomStep: 0.1
 
-    // Add smooth animation for zoom
-    Behavior on zoomFactor {
-        NumberAnimation {
-            duration: 150
-            easing.type: Easing.OutQuad
-        }
-    }
-
     property real effectiveImageWidth: {
         if (currentImageSource !== "" && loadedImage.sourceSize.width > 0) {
             var angle = Math.abs(imageRotation % 180)
@@ -56,10 +48,10 @@ ApplicationWindow {
 
     // Calculate the minimum zoom to fit the rotated image in the available area
     property real fitZoom: {
-        if (currentImageSource !== "" && imageScrollView.width > 0 && imageScrollView.height > 0) {
+        if (currentImageSource !== "" && imageFlickable.width > 0 && imageFlickable.height > 0) {
             if (effectiveImageWidth > 0 && effectiveImageHeight > 0) {
-                var scaleX = imageScrollView.width / effectiveImageWidth
-                var scaleY = imageScrollView.height / effectiveImageHeight
+                var scaleX = imageFlickable.width / effectiveImageWidth
+                var scaleY = imageFlickable.height / effectiveImageHeight
                 return Math.min(scaleX, scaleY)
             }
         }
@@ -315,6 +307,11 @@ ApplicationWindow {
             console.log("QML: Main image file selected:", filePath)
             mainWindow.currentImageSource = filePath
             imageContainer.visible = true
+
+            // Auto-fit the image when loaded
+            Qt.callLater(function() {
+                mainWindow.fitToScreen()
+            })
         }
 
         function onLayerImageSelected(filePath) {
@@ -363,6 +360,11 @@ ApplicationWindow {
         onAccepted: {
             mainWindow.currentImageSource = selectedFile
             imageContainer.visible = true
+
+            // Auto-fit the image when loaded
+            Qt.callLater(function() {
+                mainWindow.fitToScreen()
+            })
         }
     }
 
@@ -756,16 +758,22 @@ ApplicationWindow {
             Layout.fillWidth: true
             Layout.fillHeight: true
 
-            ScrollView {
-                id: imageScrollView
+            Flickable {
+                id: imageFlickable
                 anchors.fill: parent
                 visible: mainWindow.currentImageSource !== ""
 
-                ScrollBar.horizontal.policy: ScrollBar.AsNeeded
-                ScrollBar.vertical.policy: ScrollBar.AsNeeded
+                contentWidth: imageContainer.width
+                contentHeight: imageContainer.height
+                clip: true
+                boundsBehavior: Flickable.StopAtBounds
 
-                contentWidth: Math.max(width, imageContainer.width)
-                contentHeight: Math.max(height, imageContainer.height)
+                ScrollBar.horizontal: ScrollBar {
+                    policy: imageFlickable.contentWidth > imageFlickable.width ? ScrollBar.AlwaysOn : ScrollBar.AlwaysOff
+                }
+                ScrollBar.vertical: ScrollBar {
+                    policy: imageFlickable.contentHeight > imageFlickable.height ? ScrollBar.AlwaysOn : ScrollBar.AlwaysOff
+                }
 
                 // Add wheel handling for zoom
                 WheelHandler {
@@ -779,10 +787,50 @@ ApplicationWindow {
                     }
                 }
 
+                // Handle deselection on background click
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: {
+                        // Deselect all items
+                        for (var i = 0; i < imageContainer.children.length; i++) {
+                            var child = imageContainer.children[i]
+                            if (child.hasOwnProperty('selected')) {
+                                child.selected = false
+                            }
+                        }
+
+                        // Update model selection states
+                        for (var j = 0; j < itemsModel.count; j++) {
+                            itemsModel.setProperty(j, "isSelected", false)
+                        }
+
+                        // Clear selected item and update controls
+                        mainWindow.selectedTextItem = null
+                        mainWindow.updateControls()
+                    }
+                }
+
                 Item {
                     id: imageContainer
-                    width: Math.max(imageScrollView.width, mainWindow.effectiveImageWidth * mainWindow.zoomFactor)
-                    height: Math.max(imageScrollView.height, mainWindow.effectiveImageHeight * mainWindow.zoomFactor)
+                    width: Math.max(imageFlickable.width, mainWindow.effectiveImageWidth * mainWindow.zoomFactor)
+                    height: Math.max(imageFlickable.height, mainWindow.effectiveImageHeight * mainWindow.zoomFactor)
+
+                    // Add smooth animation to container size
+                    Behavior on width {
+                        //enabled: !mainWindow.zoomFromSlider
+                        NumberAnimation {
+                            duration: 200
+                            easing.type: Easing.OutQuad
+                        }
+                    }
+
+                    Behavior on height {
+                        //enabled: !mainWindow.zoomFromSlider
+                        NumberAnimation {
+                            duration: 200
+                            easing.type: Easing.OutQuad
+                        }
+                    }
 
                     Image {
                         id: loadedImage
@@ -791,6 +839,13 @@ ApplicationWindow {
                         rotation: mainWindow.imageRotation
                         z: -1000
 
+                        // Auto-fit when image is actually loaded
+                        onStatusChanged: {
+                            if (status === Image.Ready && mainWindow.zoomFactor === 1.0) {
+                                mainWindow.fitToScreen()
+                            }
+                        }
+
                         // Always center the image in the container
                         anchors.centerIn: parent
 
@@ -798,12 +853,28 @@ ApplicationWindow {
                         width: sourceSize.width
                         height: sourceSize.height
 
-                        // Use transform for scaling
+                        // Use transform for scaling with conditional animation
                         transform: Scale {
                             xScale: mainWindow.zoomFactor
                             yScale: mainWindow.zoomFactor
                             origin.x: loadedImage.width / 2
                             origin.y: loadedImage.height / 2
+
+                            Behavior on xScale {
+                                //enabled: !mainWindow.zoomFromSlider
+                                NumberAnimation {
+                                    duration: 200
+                                    easing.type: Easing.OutQuad
+                                }
+                            }
+
+                            Behavior on yScale {
+                                //enabled: !mainWindow.zoomFromSlider
+                                NumberAnimation {
+                                    duration: 200
+                                    easing.type: Easing.OutQuad
+                                }
+                            }
                         }
 
                         // Border to show image bounds
@@ -813,28 +884,6 @@ ApplicationWindow {
                             border.width: 2 / mainWindow.zoomFactor
                             border.color: Colors.accentColor
                             radius: Material.ExtraSmallScale / mainWindow.zoomFactor
-                        }
-
-                        MouseArea {
-                            anchors.fill: parent
-                            onClicked: {
-                                // Deselect all items
-                                for (var i = 0; i < imageContainer.children.length; i++) {
-                                    var child = imageContainer.children[i]
-                                    if (child.hasOwnProperty('selected')) {
-                                        child.selected = false
-                                    }
-                                }
-
-                                // Update model selection states
-                                for (var j = 0; j < itemsModel.count; j++) {
-                                    itemsModel.setProperty(j, "isSelected", false)
-                                }
-
-                                // Clear selected item and update controls
-                                mainWindow.selectedTextItem = null
-                                mainWindow.updateControls()
-                            }
                         }
                     }
                 }
