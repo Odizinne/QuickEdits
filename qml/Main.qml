@@ -156,10 +156,10 @@ ApplicationWindow {
                         text: "Add Text Layer"
                         enabled: mainWindow.currentImageSource !== ""
                         onClicked: {
-                            var textItem = textComponent.createObject(imageContainer, {
-                                x: 50,
-                                y: 50
-                            })
+                            var textItem = textComponent.createObject(scaledContent, {
+                                                                          x: 50,
+                                                                          y: 50
+                                                                      })
                             mainWindow.addItemToModel(textItem)
                             mainWindow.selectItem(textItem)
                         }
@@ -316,11 +316,11 @@ ApplicationWindow {
 
         function onLayerImageSelected(filePath) {
             console.log("QML: Layer image file selected:", filePath)
-            var imageItem = imageComponent.createObject(imageContainer, {
-                x: 50,
-                y: 50,
-                source: filePath
-            })
+            var imageItem = imageComponent.createObject(scaledContent, {
+                                                            x: 50,
+                                                            y: 50,
+                                                            source: filePath
+                                                        })
             mainWindow.addItemToModel(imageItem)
             mainWindow.selectItem(imageItem)
         }
@@ -374,13 +374,13 @@ ApplicationWindow {
         currentFolder: StandardPaths.standardLocations(StandardPaths.PicturesLocation)[0]
         nameFilters: ["Image files (*.png *.jpg *.jpeg *.bmp *.webp)"]
         onAccepted: {
-            var imageItem = imageComponent.createObject(imageContainer, {
-                x: 50,
-                y: 50,
-                source: selectedFile
-            })
+            var imageItem = imageComponent.createObject(scaledContent, {
+                                                            x: 50,
+                                                            y: 50,
+                                                            source: selectedFile
+                                                        })
             mainWindow.addItemToModel(imageItem)
-            mainWindow.selectItem(imageItem)  // Explicitly select the new item
+            mainWindow.selectItem(imageItem)
         }
     }
 
@@ -787,29 +787,6 @@ ApplicationWindow {
                     }
                 }
 
-                // Handle deselection on background click
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: {
-                        // Deselect all items
-                        for (var i = 0; i < imageContainer.children.length; i++) {
-                            var child = imageContainer.children[i]
-                            if (child.hasOwnProperty('selected')) {
-                                child.selected = false
-                            }
-                        }
-
-                        // Update model selection states
-                        for (var j = 0; j < itemsModel.count; j++) {
-                            itemsModel.setProperty(j, "isSelected", false)
-                        }
-
-                        // Clear selected item and update controls
-                        mainWindow.selectedTextItem = null
-                        mainWindow.updateControls()
-                    }
-                }
-
                 Item {
                     id: imageContainer
                     width: Math.max(imageFlickable.width, mainWindow.effectiveImageWidth * mainWindow.zoomFactor)
@@ -817,7 +794,6 @@ ApplicationWindow {
 
                     // Add smooth animation to container size
                     Behavior on width {
-                        //enabled: !mainWindow.zoomFromSlider
                         NumberAnimation {
                             duration: 200
                             easing.type: Easing.OutQuad
@@ -825,66 +801,97 @@ ApplicationWindow {
                     }
 
                     Behavior on height {
-                        //enabled: !mainWindow.zoomFromSlider
                         NumberAnimation {
                             duration: 200
                             easing.type: Easing.OutQuad
                         }
                     }
 
-                    Image {
-                        id: loadedImage
-                        source: mainWindow.currentImageSource
-                        fillMode: Image.PreserveAspectFit
-                        rotation: mainWindow.imageRotation
-                        z: -1000
-
-                        // Auto-fit when image is actually loaded
-                        onStatusChanged: {
-                            if (status === Image.Ready && mainWindow.zoomFactor === 1.0) {
-                                mainWindow.fitToScreen()
+                    // Handle deselection on background click
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: {
+                            // Deselect all items
+                            for (var i = 0; i < scaledContent.children.length; i++) {
+                                var child = scaledContent.children[i]
+                                if (child.hasOwnProperty('selected')) {
+                                    child.selected = false
+                                }
                             }
-                        }
 
-                        // Always center the image in the container
+                            // Update model selection states
+                            for (var j = 0; j < itemsModel.count; j++) {
+                                itemsModel.setProperty(j, "isSelected", false)
+                            }
+
+                            // Clear selected item and update controls
+                            mainWindow.selectedTextItem = null
+                            mainWindow.updateControls()
+                        }
+                    }
+
+                    Item {
+                        id: scaledContent
                         anchors.centerIn: parent
+                        width: mainWindow.effectiveImageWidth
+                        height: mainWindow.effectiveImageHeight
 
-                        // Keep original size
-                        width: sourceSize.width
-                        height: sourceSize.height
+                        transform: [
+                            Rotation {
+                                angle: mainWindow.imageRotation
+                                origin.x: scaledContent.width / 2
+                                origin.y: scaledContent.height / 2
+                            },
+                            Scale {
+                                xScale: mainWindow.zoomFactor
+                                yScale: mainWindow.zoomFactor
+                                origin.x: scaledContent.width / 2
+                                origin.y: scaledContent.height / 2
 
-                        // Use transform for scaling with conditional animation
-                        transform: Scale {
-                            xScale: mainWindow.zoomFactor
-                            yScale: mainWindow.zoomFactor
-                            origin.x: loadedImage.width / 2
-                            origin.y: loadedImage.height / 2
+                                Behavior on xScale {
+                                    NumberAnimation {
+                                        duration: 200
+                                        easing.type: Easing.OutQuad
+                                    }
+                                }
 
-                            Behavior on xScale {
-                                //enabled: !mainWindow.zoomFromSlider
-                                NumberAnimation {
-                                    duration: 200
-                                    easing.type: Easing.OutQuad
+                                Behavior on yScale {
+                                    NumberAnimation {
+                                        duration: 200
+                                        easing.type: Easing.OutQuad
+                                    }
+                                }
+                            }
+                        ]
+
+                        Image {
+                            id: loadedImage
+                            anchors.centerIn: parent
+                            source: mainWindow.currentImageSource
+                            fillMode: Image.PreserveAspectFit
+                            z: -1000
+                            width: sourceSize.width
+                            height: sourceSize.height
+
+                            // Auto-fit when image is actually loaded
+                            onStatusChanged: {
+                                if (status === Image.Ready && mainWindow.zoomFactor === 1.0) {
+                                    mainWindow.fitToScreen()
                                 }
                             }
 
-                            Behavior on yScale {
-                                //enabled: !mainWindow.zoomFromSlider
-                                NumberAnimation {
-                                    duration: 200
-                                    easing.type: Easing.OutQuad
-                                }
+                            // Border to show image bounds - fixed size
+                            Rectangle {
+                                anchors.fill: parent
+                                color: "transparent"
+                                border.width: 2
+                                border.color: Colors.accentColor
+                                radius: Material.ExtraSmallScale
                             }
                         }
 
-                        // Border to show image bounds
-                        Rectangle {
-                            anchors.fill: parent
-                            color: "transparent"
-                            border.width: 2 / mainWindow.zoomFactor
-                            border.color: Colors.accentColor
-                            radius: Material.ExtraSmallScale / mainWindow.zoomFactor
-                        }
+                        // All text and image components will be children of scaledContent
+                        // and will automatically follow the zoom and rotation transforms
                     }
                 }
             }
@@ -1056,7 +1063,7 @@ ApplicationWindow {
             property alias itemLayer: textRect.z
             property bool selected: false
 
-            // Selection border
+            // Selection border - fixed sizes, no zoom division
             Item {
                 anchors.fill: parent
                 visible: parent.selected
@@ -1089,9 +1096,9 @@ ApplicationWindow {
                 anchors.topMargin: 15 // Leave space for rotation handle
                 drag.target: parent
                 drag.minimumX: 0
-                drag.maximumX: imageContainer.width - parent.width
+                drag.maximumX: scaledContent.width - parent.width
                 drag.minimumY: 0
-                drag.maximumY: imageContainer.height - parent.height
+                drag.maximumY: scaledContent.height - parent.height
 
                 onPressed: {
                     mainWindow.selectItem(textRect)
@@ -1102,7 +1109,7 @@ ApplicationWindow {
                 }
             }
 
-            // Rotation handle for text component
+            // Rotation handle - fixed size
             MouseArea {
                 id: rotationHandle
                 width: 12
@@ -1118,14 +1125,11 @@ ApplicationWindow {
                 property real startAngle
 
                 onPressed: {
-                    // Get the center point of the text item in global coordinates
-                    var globalCenter = textRect.mapToItem(textRect.parent, textRect.width/2, textRect.height/2)
-                    centerX = globalCenter.x
-                    centerY = globalCenter.y
+                    centerX = textRect.width/2
+                    centerY = textRect.height/2
 
-                    // Calculate initial angle from center to mouse position
-                    var globalMouse = mapToItem(textRect.parent, mouseX, mouseY)
-                    startAngle = Math.atan2(globalMouse.y - centerY, globalMouse.x - centerX) * 180 / Math.PI - textRect.rotation
+                    var localMouse = mapToItem(textRect, mouseX, mouseY)
+                    startAngle = Math.atan2(localMouse.y - centerY, localMouse.x - centerX) * 180 / Math.PI - textRect.rotation
 
                     cursorShape = Qt.ClosedHandCursor
                 }
@@ -1136,11 +1140,9 @@ ApplicationWindow {
 
                 onPositionChanged: {
                     if (pressed) {
-                        // Calculate current angle from center to mouse position
-                        var globalMouse = mapToItem(textRect.parent, mouseX, mouseY)
-                        var currentAngle = Math.atan2(globalMouse.y - centerY, globalMouse.x - centerX) * 180 / Math.PI
+                        var localMouse = mapToItem(textRect, mouseX, mouseY)
+                        var currentAngle = Math.atan2(localMouse.y - centerY, localMouse.x - centerX) * 180 / Math.PI
 
-                        // Set rotation based on angle difference
                         textRect.rotation = currentAngle - startAngle
                     }
                 }
@@ -1154,7 +1156,7 @@ ApplicationWindow {
                 }
             }
 
-            // Resize handle
+            // Resize handle - fixed size
             MouseArea {
                 id: resizeHandle
                 width: 10
@@ -1214,7 +1216,7 @@ ApplicationWindow {
                 anchors.margins: 2
                 rotation: imageRect.imageRotation
 
-                // Selection border - now rotates with content
+                // Selection border - fixed size
                 Rectangle {
                     anchors.fill: parent
                     color: imageRect.selected ? Colors.accentColorDimmed : "transparent"
@@ -1237,16 +1239,16 @@ ApplicationWindow {
                 anchors.topMargin: 15 // Leave space for rotation handle
                 drag.target: parent
                 drag.minimumX: 0
-                drag.maximumX: imageContainer.width - parent.width
+                drag.maximumX: scaledContent.width - parent.width
                 drag.minimumY: 0
-                drag.maximumY: imageContainer.height - parent.height
+                drag.maximumY: scaledContent.height - parent.height
 
                 onPressed: {
                     mainWindow.selectItem(imageRect)
                 }
             }
 
-            // Rotation handle for image component
+            // Rotation handle - fixed size
             MouseArea {
                 id: rotationHandle
                 width: 12
@@ -1262,14 +1264,11 @@ ApplicationWindow {
                 property real startAngle
 
                 onPressed: {
-                    // Get the center point of the image item in global coordinates
-                    var globalCenter = imageRect.mapToItem(imageRect.parent, imageRect.width/2, imageRect.height/2)
-                    centerX = globalCenter.x
-                    centerY = globalCenter.y
+                    centerX = imageRect.width/2
+                    centerY = imageRect.height/2
 
-                    // Calculate initial angle from center to mouse position
-                    var globalMouse = mapToItem(imageRect.parent, mouseX, mouseY)
-                    startAngle = Math.atan2(globalMouse.y - centerY, globalMouse.x - centerX) * 180 / Math.PI - imageRect.imageRotation
+                    var localMouse = mapToItem(imageRect, mouseX, mouseY)
+                    startAngle = Math.atan2(localMouse.y - centerY, localMouse.x - centerX) * 180 / Math.PI - imageRect.imageRotation
 
                     cursorShape = Qt.ClosedHandCursor
                 }
@@ -1280,11 +1279,9 @@ ApplicationWindow {
 
                 onPositionChanged: {
                     if (pressed) {
-                        // Calculate current angle from center to mouse position
-                        var globalMouse = mapToItem(imageRect.parent, mouseX, mouseY)
-                        var currentAngle = Math.atan2(globalMouse.y - centerY, globalMouse.x - centerX) * 180 / Math.PI
+                        var localMouse = mapToItem(imageRect, mouseX, mouseY)
+                        var currentAngle = Math.atan2(localMouse.y - centerY, localMouse.x - centerX) * 180 / Math.PI
 
-                        // Set rotation based on angle difference
                         imageRect.imageRotation = currentAngle - startAngle
                     }
                 }
@@ -1298,7 +1295,7 @@ ApplicationWindow {
                 }
             }
 
-            // Resize handle
+            // Resize handle - fixed size
             MouseArea {
                 id: resizeHandle
                 width: 10
@@ -1437,13 +1434,13 @@ ApplicationWindow {
 
         // Insert at the beginning (top of list = highest z)
         itemsModel.insert(0, {
-            item: item,
-            preview: preview || "Empty",
-            type: type,
-            details: details,
-            layer: newLayer,
-            isSelected: true
-        })
+                              item: item,
+                              preview: preview || "Empty",
+                              type: type,
+                              details: details,
+                              layer: newLayer,
+                              isSelected: true
+                          })
 
         // Deselect all other items
         for (var j = 1; j < itemsModel.count; j++) {
@@ -1478,8 +1475,8 @@ ApplicationWindow {
 
     function selectItem(item) {
         // Deselect all items first
-        for (var j = 0; j < imageContainer.children.length; j++) {
-            var child = imageContainer.children[j]
+        for (var j = 0; j < scaledContent.children.length; j++) {
+            var child = scaledContent.children[j]
             if (child.hasOwnProperty('selected')) {
                 child.selected = false
             }
