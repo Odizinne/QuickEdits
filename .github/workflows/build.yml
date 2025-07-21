@@ -6,7 +6,67 @@ on:
       - main
 env:
   QT_VERSION: '6.9.1'
+
 jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get version from CMake
+        id: cmake_version
+        uses: DarwinInnovation/cmake-project-version-action@v1.0
+
+      - name: Set up Visual Studio shell
+        uses: egor-tensin/vs-shell@v2
+        with:
+          arch: x64
+
+      - name: Install Qt
+        id: qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ env.QT_VERSION }}
+          arch: 'win64_msvc2022_64'
+          modules: 'qtimageformats'
+          add-tools-to-path: true
+          cache: true
+
+      - name: Generate and Build with CMake
+        shell: pwsh
+        run: |
+          mkdir -p build
+          cd build
+          cmake ..
+          cmake --build . --config Release
+          cmake --install . --config Release
+
+      - name: Rename release folder
+        shell: pwsh
+        run: |
+          $releaseDir = "build/install"
+          $newDir = "QuickEdits"
+          if (Test-Path $releaseDir) {
+              Rename-Item -Path $releaseDir -NewName $newDir
+          } else {
+              Write-Error "Release folder not found!"
+              exit 1
+          }
+
+      - name: Zip binaries folder
+        shell: pwsh
+        run: |
+          $zipFile = "build/QuickEdits_win64_msvc2022.zip"
+          $folder = "build/QuickEdits"
+          Compress-Archive -Path $folder -DestinationPath $zipFile
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: QuickEdits_win64_msvc2022
+          path: build/QuickEdits_win64_msvc2022.zip
+
   build-linux:
     runs-on: ubuntu-22.04
 
