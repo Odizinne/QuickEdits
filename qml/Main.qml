@@ -16,7 +16,7 @@ ApplicationWindow {
     minimumHeight: 805
     title: "QuickEdits"
     Material.theme: Material.Dark
-    color: "#191919"
+    color: Colors.backgroundColor
 
     property string currentImageSource: ""
     property var selectedTextItem: null
@@ -68,7 +68,7 @@ ApplicationWindow {
         onFileNameAccepted: function(fileName) {
             console.log("QML: Save dialog accepted with filename:", fileName)
             ImageExporter.saveImage(imageContainer, fileName)
-            donatePopup.visible = true
+            donatePopup.visible = UserSettings.displayDonate
         }
 
         onFileNameRejected: {
@@ -147,6 +147,7 @@ ApplicationWindow {
 
     DonatePopup {
         id: donatePopup
+        anchors.centerIn: parent
     }
 
     FontLoader {
@@ -180,7 +181,7 @@ ApplicationWindow {
 
         // Left panel - controls
         Pane {
-            Material.background: "#2B2B2B"
+            Material.background: Colors.paneColor
             Material.elevation: 6
             Material.roundedScale: Material.ExtraSmallScale
             Layout.preferredWidth: 300
@@ -473,7 +474,7 @@ ApplicationWindow {
 
         // Center panel - image area
         Pane {
-            Material.background: "#2B2B2B"
+            Material.background: Colors.paneColor
             Material.elevation: 6
             Material.roundedScale: Material.ExtraSmallScale
             Layout.fillWidth: true
@@ -528,7 +529,7 @@ ApplicationWindow {
 
         // Right panel - items list sidebar
         Pane {
-            Material.background: "#2B2B2B"
+            Material.background: Colors.paneColor
             Material.elevation: 6
             Material.roundedScale: Material.ExtraSmallScale
             Layout.preferredWidth: 250

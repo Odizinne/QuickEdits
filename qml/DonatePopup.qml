@@ -17,7 +17,9 @@ Popup {
     onVisibleChanged: {
         if (!visible) {
             parent.forceActiveFocus()
+            console.log("Before toggle - displayDonate:", UserSettings.displayDonate)
             UserSettings.displayDonate = false
+            console.log("After toggle - displayDonate:", UserSettings.displayDonate)
         }
     }
 
@@ -27,7 +29,7 @@ Popup {
         spacing: 20
 
         Label {
-            text: qsTr("Enjoying the game?")
+            text: qsTr("Found this app useful?")
             Layout.fillWidth: true
             font.bold: true
             font.pixelSize: 20

@@ -16,13 +16,11 @@ set(SOURCES
     src/main.cpp
     src/imageexporter.cpp
     src/filehandler.cpp
-    src/usersettings.cpp
 )
 
 set(HEADERS
     include/imageexporter.h
     include/filehandler.h
-    include/usersettings.h
 )
 
 set(QML_FILES
@@ -35,8 +33,9 @@ set(QML_FILES
 )
 
 set(QML_SINGLETONS
-    #qml/Singletons/UserSettings.qml
+    qml/Singletons/UserSettings.qml
     qml/Singletons/Constants.qml
+    qml/Singletons/Colors.qml
 )
 
 set_source_files_properties(${QML_SINGLETONS}
