@@ -930,11 +930,6 @@ ApplicationWindow {
                         height: mainWindow.effectiveImageHeight
 
                         transform: [
-                            Rotation {
-                                angle: mainWindow.imageRotation
-                                origin.x: scaledContent.width / 2
-                                origin.y: scaledContent.height / 2
-                            },
                             Scale {
                                 xScale: mainWindow.zoomFactor
                                 yScale: mainWindow.zoomFactor
@@ -966,26 +961,30 @@ ApplicationWindow {
                             width: sourceSize.width
                             height: sourceSize.height
 
-                            // Auto-fit when image is actually loaded
+                            // Move rotation here instead of on scaledContent
+                            transform: Rotation {
+                                angle: mainWindow.imageRotation
+                                origin.x: loadedImage.width / 2
+                                origin.y: loadedImage.height / 2
+                            }
+
                             onStatusChanged: {
                                 if (status === Image.Ready && mainWindow.zoomFactor === 1.0) {
                                     mainWindow.fitToScreen()
                                 }
                             }
 
-                            // Border to show image bounds - fixed size
                             Rectangle {
                                 objectName: "imageBorder"
                                 anchors.fill: parent
                                 color: "transparent"
                                 border.width: 2 / mainWindow.zoomFactor
                                 border.color: Colors.accentColor
-                                //radius: Material.ExtraSmallScale
                             }
                         }
 
                         // All text and image components will be children of scaledContent
-                        // and will automatically follow the zoom and rotation transforms
+                        // and will follow the zoom but NOT the rotation
                     }
                 }
             }
