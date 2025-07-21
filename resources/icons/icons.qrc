@@ -4,7 +4,10 @@
         <file>layer.svg</file>
         <file>github.svg</file>
         <file>donate.svg</file>
+        <file>download.svg</file>
         <file>sun.png</file>
         <file>moon.png</file>
+        <file>windows.svg</file>
+        <file>linux.svg</file>
     </qresource>
 </RCC>

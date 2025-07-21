@@ -184,6 +184,27 @@ ApplicationWindow {
             }
 
             Button {
+                id: downloadButton
+                text: qsTr("Desktop App")
+                icon.source: "qrc:/icons/download.svg"
+                Layout.preferredWidth: implicitWidth + 20
+                icon.color: "white"
+                icon.width: 20
+                icon.height: 20
+                flat: true
+                visible: Qt.platform.os === "wasm"
+                onClicked: {
+                    downloadPopup.open()
+                }
+            }
+
+            ToolSeparator {
+                Layout.leftMargin: 10
+                Layout.rightMargin: 10
+                visible: Qt.platform.os === "wasm"
+            }
+
+            Button {
                 id: githubButton
                 text: qsTr("Github")
                 icon.source: "qrc:/icons/github.svg"
@@ -436,6 +457,11 @@ ApplicationWindow {
     FontLoader {
         id: customFont3
         source: "qrc:/fonts/MessySketch-Regular.ttf"
+    }
+
+    DownloadPopup {
+        id: downloadPopup
+        anchors.centerIn: parent
     }
 
     RowLayout {

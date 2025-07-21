@@ -30,6 +30,7 @@ set(QML_FILES
     qml/MaterialButton.qml
     qml/SaveNamingDialog.qml
     qml/DonatePopup.qml
+    qml/DownloadPopup.qml
 )
 
 set(QML_SINGLETONS
