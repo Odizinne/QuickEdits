@@ -19,6 +19,75 @@ ApplicationWindow {
     Material.theme: UserSettings.darkMode ? Material.Dark : Material.Light
     color: Colors.backgroundColor
 
+    property real zoomFactor: 1.0
+    property real minZoom: 0.1
+    property real maxZoom: 5.0
+    property real zoomStep: 0.1
+
+    // Add smooth animation for zoom
+    Behavior on zoomFactor {
+        NumberAnimation {
+            duration: 150
+            easing.type: Easing.OutQuad
+        }
+    }
+
+    property real effectiveImageWidth: {
+        if (currentImageSource !== "" && loadedImage.sourceSize.width > 0) {
+            var angle = Math.abs(imageRotation % 180)
+            if (angle === 90) {
+                return loadedImage.sourceSize.height
+            }
+            return loadedImage.sourceSize.width
+        }
+        return 0
+    }
+
+    property real effectiveImageHeight: {
+        if (currentImageSource !== "" && loadedImage.sourceSize.height > 0) {
+            var angle = Math.abs(imageRotation % 180)
+            if (angle === 90) {
+                return loadedImage.sourceSize.width
+            }
+            return loadedImage.sourceSize.height
+        }
+        return 0
+    }
+
+    // Calculate the minimum zoom to fit the rotated image in the available area
+    property real fitZoom: {
+        if (currentImageSource !== "" && imageScrollView.width > 0 && imageScrollView.height > 0) {
+            if (effectiveImageWidth > 0 && effectiveImageHeight > 0) {
+                var scaleX = imageScrollView.width / effectiveImageWidth
+                var scaleY = imageScrollView.height / effectiveImageHeight
+                return Math.min(scaleX, scaleY)
+            }
+        }
+        return minZoom
+    }
+
+    // Dynamic minimum zoom - never go below fit zoom
+    property real effectiveMinZoom: Math.max(minZoom, fitZoom)
+
+    function zoomIn() {
+        if (zoomFactor < maxZoom) {
+            zoomFactor = Math.min(maxZoom, zoomFactor + zoomStep)
+        }
+    }
+
+    function zoomOut() {
+        if (zoomFactor > effectiveMinZoom) {
+            zoomFactor = Math.max(effectiveMinZoom, zoomFactor - zoomStep)
+        }
+    }
+
+    function resetZoom() {
+        zoomFactor = Math.max(1.0, effectiveMinZoom)
+    }
+
+    function fitToScreen() {
+        zoomFactor = fitZoom
+    }
 
     property string currentImageSource: ""
     property var selectedTextItem: null
@@ -433,6 +502,52 @@ ApplicationWindow {
                     }
                 }
 
+                ColumnLayout {
+                    visible: mainWindow.currentImageSource !== ""
+                    spacing: 8
+
+                    Label {
+                        text: "Zoom: " + Math.round(mainWindow.zoomFactor * 100) + "%"
+                        font.pixelSize: 12
+                    }
+
+                    RowLayout {
+                        Layout.fillWidth: true
+
+                        Slider {
+                            id: zoomSlider
+                            Layout.fillWidth: true
+                            from: mainWindow.effectiveMinZoom
+                            to: mainWindow.maxZoom
+                            value: mainWindow.zoomFactor
+                            stepSize: 0.05
+
+                            onValueChanged: {
+                                if (mainWindow.zoomFactor !== value) {
+                                    mainWindow.zoomFactor = value
+                                }
+                            }
+
+                            Connections {
+                                target: mainWindow
+                                function onZoomFactorChanged() {
+                                    if (zoomSlider.value !== mainWindow.zoomFactor) {
+                                        zoomSlider.value = mainWindow.zoomFactor
+                                    }
+                                }
+                            }
+                        }
+
+                        MaterialButton {
+                            text: "Reset"
+                            Layout.preferredWidth: 60
+                            onClicked: {
+                                mainWindow.resetZoom()
+                            }
+                        }
+                    }
+                }
+
                 MenuSeparator {
                     Layout.fillWidth: true
                     visible: mainWindow.selectedTextItem !== null
@@ -641,38 +756,85 @@ ApplicationWindow {
             Layout.fillWidth: true
             Layout.fillHeight: true
 
-            Item {
-                id: imageContainer
+            ScrollView {
+                id: imageScrollView
                 anchors.fill: parent
-                visible: false
+                visible: mainWindow.currentImageSource !== ""
 
-                Image {
-                    id: loadedImage
-                    anchors.fill: parent
-                    source: mainWindow.currentImageSource
-                    fillMode: Image.PreserveAspectFit
-                    rotation: mainWindow.imageRotation
-                    z: -1000
+                ScrollBar.horizontal.policy: ScrollBar.AsNeeded
+                ScrollBar.vertical.policy: ScrollBar.AsNeeded
 
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: {
-                            // Deselect all items
-                            for (var i = 0; i < imageContainer.children.length; i++) {
-                                var child = imageContainer.children[i]
-                                if (child.hasOwnProperty('selected')) {
-                                    child.selected = false
+                contentWidth: Math.max(width, imageContainer.width)
+                contentHeight: Math.max(height, imageContainer.height)
+
+                // Add wheel handling for zoom
+                WheelHandler {
+                    acceptedModifiers: Qt.ControlModifier
+                    onWheel: function(event) {
+                        if (event.angleDelta.y > 0) {
+                            mainWindow.zoomIn()
+                        } else {
+                            mainWindow.zoomOut()
+                        }
+                    }
+                }
+
+                Item {
+                    id: imageContainer
+                    width: Math.max(imageScrollView.width, mainWindow.effectiveImageWidth * mainWindow.zoomFactor)
+                    height: Math.max(imageScrollView.height, mainWindow.effectiveImageHeight * mainWindow.zoomFactor)
+
+                    Image {
+                        id: loadedImage
+                        source: mainWindow.currentImageSource
+                        fillMode: Image.PreserveAspectFit
+                        rotation: mainWindow.imageRotation
+                        z: -1000
+
+                        // Always center the image in the container
+                        anchors.centerIn: parent
+
+                        // Keep original size
+                        width: sourceSize.width
+                        height: sourceSize.height
+
+                        // Use transform for scaling
+                        transform: Scale {
+                            xScale: mainWindow.zoomFactor
+                            yScale: mainWindow.zoomFactor
+                            origin.x: loadedImage.width / 2
+                            origin.y: loadedImage.height / 2
+                        }
+
+                        // Border to show image bounds
+                        Rectangle {
+                            anchors.fill: parent
+                            color: "transparent"
+                            border.width: 2 / mainWindow.zoomFactor
+                            border.color: Colors.accentColor
+                            radius: Material.ExtraSmallScale / mainWindow.zoomFactor
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: {
+                                // Deselect all items
+                                for (var i = 0; i < imageContainer.children.length; i++) {
+                                    var child = imageContainer.children[i]
+                                    if (child.hasOwnProperty('selected')) {
+                                        child.selected = false
+                                    }
                                 }
-                            }
 
-                            // Update model selection states
-                            for (var j = 0; j < itemsModel.count; j++) {
-                                itemsModel.setProperty(j, "isSelected", false)
-                            }
+                                // Update model selection states
+                                for (var j = 0; j < itemsModel.count; j++) {
+                                    itemsModel.setProperty(j, "isSelected", false)
+                                }
 
-                            // Clear selected item and update controls
-                            mainWindow.selectedTextItem = null
-                            mainWindow.updateControls()
+                                // Clear selected item and update controls
+                                mainWindow.selectedTextItem = null
+                                mainWindow.updateControls()
+                            }
                         }
                     }
                 }
@@ -682,7 +844,6 @@ ApplicationWindow {
                 text: "Import an image to start"
                 opacity: 0.5
                 font.pixelSize: 18
-
                 anchors.centerIn: parent
                 visible: mainWindow.currentImageSource === ""
             }
