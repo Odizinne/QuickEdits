@@ -19,6 +19,7 @@ ApplicationWindow {
     Material.theme: UserSettings.darkMode ? Material.Dark : Material.Light
     color: Colors.backgroundColor
 
+
     property string currentImageSource: ""
     property var selectedTextItem: null
     property real imageRotation: 0
