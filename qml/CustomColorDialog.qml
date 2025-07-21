@@ -12,8 +12,8 @@ Dialog {
     anchors.centerIn: parent
     Material.roundedScale: Material.ExtraSmallScale
 
-    property color selectedColor: "white"
-    property color currentColor: "white"
+    property color selectedColor: Colors.placeholderColor
+    property color currentColor: Colors.placeholderColor
 
     standardButtons: Dialog.Ok | Dialog.Cancel
 
@@ -190,7 +190,7 @@ Dialog {
             TextField {
                 id: hexField
                 Layout.fillWidth: true
-                text: "#ffffff"
+                text: Colors.placeholderColor
                 validator: RegularExpressionValidator { regularExpression: /^#[0-9A-Fa-f]{6}$/ }
                 onTextChanged: {
                     if (acceptableInput && !root.updatingFromCursors) {

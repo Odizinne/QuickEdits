@@ -13,4 +13,5 @@ QtObject {
     readonly property color backgroundColor: isDarkTheme ? "#1C1C1C" : "#E3E3E3"
     readonly property color handleColor: !isDarkTheme ? "#1C1C1C" : "#E3E3E3"
     readonly property color paneColor: isDarkTheme ? "#2B2B2B" : "#FFFFFF"
+    readonly property color placeholderColor: isDarkTheme ? "#ed4a68" : "#d12847"
 }

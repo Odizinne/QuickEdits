@@ -29,8 +29,8 @@ ApplicationWindow {
             anchors.fill: parent
             anchors.rightMargin: 15
             spacing: 0
-            property int buttonWidth: Math.max(fileBtn.implicitWidth, layersBtn.implicitWidth)
-            property int rightButtonWidth: Math.max(donateButton.implicitWidth, githubButton.implicitWidth)
+            property int buttonWidth: Math.max(fileBtn.implicitWidth, layersBtn.implicitWidth) + 20
+            property int rightButtonWidth: Math.max(donateButton.implicitWidth, githubButton.implicitWidth) + 20
 
 
             ToolButton {
@@ -866,7 +866,7 @@ ApplicationWindow {
                 text: "Sample Text"
                 font.family: "Arial"
                 font.pixelSize: 24
-                color: "white"
+                color: Colors.placeholderColor
                 selectByMouse: false
                 wrapMode: TextEdit.Wrap
             }
@@ -1323,7 +1323,7 @@ ApplicationWindow {
             fontSize.value = 24
             boldCheck.checked = false
             italicCheck.checked = false
-            colorPicker.selectedColor = "black"
+            colorPicker.selectedColor = Colors.placeholderColor
         }
     }
 }
