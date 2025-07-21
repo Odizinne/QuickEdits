@@ -21,7 +21,7 @@ ApplicationWindow {
 
     property real zoomFactor: 1.0
     property real minZoom: 0.1
-    property real maxZoom: 5.0
+    property real maxZoom: 3.0
     property real zoomStep: 0.1
 
     property real effectiveImageWidth: {
@@ -919,9 +919,9 @@ ApplicationWindow {
                             Rectangle {
                                 anchors.fill: parent
                                 color: "transparent"
-                                border.width: 2
+                                border.width: 2 / mainWindow.zoomFactor
                                 border.color: Colors.accentColor
-                                radius: Material.ExtraSmallScale
+                                //radius: Material.ExtraSmallScale
                             }
                         }
 
