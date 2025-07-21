@@ -788,7 +788,9 @@ ApplicationWindow {
                 id: imageFlickable
                 anchors.fill: parent
                 visible: mainWindow.currentImageSource !== ""
+                property bool allowDrag: true
 
+                interactive: allowDrag
                 contentWidth: imageContainer.width
                 contentHeight: imageContainer.height
                 clip: true
@@ -836,6 +838,11 @@ ApplicationWindow {
                     // Handle deselection on background click
                     MouseArea {
                         anchors.fill: parent
+                        onPressed: {
+                            // Allow flickable to drag only if press is on background
+                            imageFlickable.allowDrag = true
+                        }
+
                         onClicked: {
                             // Deselect all items
                             for (var i = 0; i < scaledContent.children.length; i++) {
@@ -1151,16 +1158,19 @@ ApplicationWindow {
                 property real startAngle
 
                 onPressed: {
+                    // Disable flickable dragging
+                    imageFlickable.allowDrag = false
+
                     centerX = textRect.width/2
                     centerY = textRect.height/2
-
                     var localMouse = mapToItem(textRect, mouseX, mouseY)
                     startAngle = Math.atan2(localMouse.y - centerY, localMouse.x - centerX) * 180 / Math.PI - textRect.rotation
-
                     cursorShape = Qt.ClosedHandCursor
                 }
 
                 onReleased: {
+                    // Re-enable flickable dragging
+                    imageFlickable.allowDrag = true
                     cursorShape = Qt.OpenHandCursor
                 }
 
@@ -1196,8 +1206,15 @@ ApplicationWindow {
                 property real lastMouseY
 
                 onPressed: {
+                    // Disable flickable dragging
+                    imageFlickable.allowDrag = false
                     lastMouseX = mouseX
                     lastMouseY = mouseY
+                }
+
+                onReleased: {
+                    // Re-enable flickable dragging
+                    imageFlickable.allowDrag = true
                 }
 
                 onPositionChanged: {
@@ -1290,6 +1307,7 @@ ApplicationWindow {
                 property real startAngle
 
                 onPressed: {
+                    imageFlickable.allowDrag = false
                     centerX = imageRect.width/2
                     centerY = imageRect.height/2
 
@@ -1300,6 +1318,7 @@ ApplicationWindow {
                 }
 
                 onReleased: {
+                    imageFlickable.allowDrag = true
                     cursorShape = Qt.OpenHandCursor
                 }
 
@@ -1335,8 +1354,15 @@ ApplicationWindow {
                 property real lastMouseY
 
                 onPressed: {
+                    // Disable flickable dragging
+                    imageFlickable.allowDrag = false
                     lastMouseX = mouseX
                     lastMouseY = mouseY
+                }
+
+                onReleased: {
+                    // Re-enable flickable dragging
+                    imageFlickable.allowDrag = true
                 }
 
                 onPositionChanged: {
