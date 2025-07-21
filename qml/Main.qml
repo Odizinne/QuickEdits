@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Controls.Material
+import QtQuick.Controls.impl
 import QtQuick.Layouts
 import QtQuick.Dialogs
 import QtCore
@@ -15,12 +16,212 @@ ApplicationWindow {
     minimumWidth: 1400
     minimumHeight: 805
     title: "QuickEdits"
-    Material.theme: Material.Dark
+    Material.theme: UserSettings.darkMode ? Material.Dark : Material.Light
     color: Colors.backgroundColor
 
     property string currentImageSource: ""
     property var selectedTextItem: null
     property real imageRotation: 0
+
+    header: ToolBar {
+        height: 50
+        RowLayout {
+            anchors.fill: parent
+            anchors.rightMargin: 15
+            spacing: 0
+            property int buttonWidth: Math.max(fileBtn.implicitWidth, layersBtn.implicitWidth)
+            property int rightButtonWidth: Math.max(donateButton.implicitWidth, githubButton.implicitWidth)
+
+
+            ToolButton {
+                id: fileBtn
+                text: "File"
+                Layout.preferredHeight: 50
+                Layout.preferredWidth: parent.buttonWidth
+                icon.source: "qrc:/icons/file.svg"
+                icon.color: "white"
+                Material.foreground: "white"
+                icon.width: 16
+                icon.height: 16
+                onClicked: fileMenu.visible = !fileMenu.visible
+
+                Menu {
+                    id: fileMenu
+                    y: 50
+                    MenuItem {
+                        text: "Upload Image"
+                        onClicked: {
+                            if (Qt.platform.os === "wasm") {
+                                FileHandler.openFileDialog()
+                            } else {
+                                fileDialog.open()
+                            }
+                        }
+                    }
+
+                    MenuItem {
+                        text: "Save Image"
+                        enabled: mainWindow.currentImageSource !== ""
+                        onClicked: {
+                            if (Qt.platform.os === "wasm") {
+                                ImageExporter.openSaveDialog(imageContainer)
+                            } else {
+                                saveFileDialog.generateFileName()
+                                saveFileDialog.open()
+                            }
+                        }
+                    }
+                }
+            }
+
+            ToolButton {
+                id: layersBtn
+                text: "Layers"
+                Layout.preferredHeight: 50
+                Layout.preferredWidth: parent.buttonWidth
+                icon.source: "qrc:/icons/layer.svg"
+                icon.color: "white"
+                Material.foreground: "white"
+                icon.width: 16
+                icon.height: 16
+                onClicked: layersMenu.visible = !layersMenu.visible
+
+
+                Menu {
+                    id: layersMenu
+                    y: 50
+                    MenuItem {
+                        text: "Add Text Layer"
+                        enabled: mainWindow.currentImageSource !== ""
+                        onClicked: {
+                            var textItem = textComponent.createObject(imageContainer, {
+                                x: 50,
+                                y: 50
+                            })
+                            mainWindow.addItemToModel(textItem)
+                            mainWindow.selectItem(textItem)
+                        }
+                    }
+
+                    MenuItem {
+                        text: "Add Image Layer"
+                        enabled: mainWindow.currentImageSource !== ""
+                        onClicked: {
+                            if (Qt.platform.os === "wasm") {
+                                FileHandler.openLayerImageDialog()
+                            } else {
+                                layerImageDialog.open()
+                            }
+                        }
+                    }
+                }
+            }
+
+            Item {
+                Layout.fillWidth: true
+            }
+
+            Button {
+                id: githubButton
+                text: qsTr("Github")
+                icon.source: "qrc:/icons/github.svg"
+                Layout.preferredWidth: parent.rightButtonWidth
+                icon.color: "white"
+                icon.width: 20
+                icon.height: 20
+                flat: true
+                onClicked: {
+                    Qt.openUrlExternally("https://github.com/odizinne/quickedits")
+                    donatePopup.close()
+                }
+            }
+
+            Button {
+                id: donateButton
+                text: qsTr("Donate")
+                Layout.leftMargin: 8
+                icon.source: "qrc:/icons/donate.svg"
+                Layout.preferredWidth: parent.rightButtonWidth
+                icon.color: Material.accent
+                icon.width: 20
+                icon.height: 20
+                font.bold: true
+                flat: true
+                onClicked: {
+                    Qt.openUrlExternally("https://ko-fi.com/odizinne")
+                    donatePopup.close()
+                }
+            }
+
+            ToolSeparator {
+                Layout.leftMargin: 10
+                Layout.rightMargin: 10
+            }
+
+            Item {
+                Layout.preferredHeight: 24
+                Layout.preferredWidth: 24
+
+                IconImage {
+                    id: sunImage
+                    anchors.fill: parent
+                    source: "qrc:/icons/sun.png"
+                    color: "#ffca38"
+                    opacity: !themeSwitch.checked ? 1 : 0
+                    rotation: themeSwitch.checked ? 360 : 0
+                    mipmap: true
+
+                    Behavior on rotation {
+                        NumberAnimation {
+                            duration: 500
+                            easing.type: Easing.OutQuad
+                        }
+                    }
+
+                    Behavior on opacity {
+                        NumberAnimation { duration: 500 }
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: themeSwitch.checked = !themeSwitch.checked
+                    }
+                }
+
+                Image {
+                    anchors.fill: parent
+                    id: moonImage
+                    source: "qrc:/icons/moon.png"
+                    opacity: themeSwitch.checked ? 1 : 0
+                    rotation: themeSwitch.checked ? 360 : 0
+                    mipmap: true
+
+                    Behavior on rotation {
+                        NumberAnimation {
+                            duration: 500
+                            easing.type: Easing.OutQuad
+                        }
+                    }
+
+                    Behavior on opacity {
+                        NumberAnimation { duration: 100 }
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: themeSwitch.checked = !themeSwitch.checked
+                    }
+                }
+            }
+
+            Switch {
+                id: themeSwitch
+                checked: UserSettings.darkMode
+                onClicked: UserSettings.darkMode = checked
+                Layout.rightMargin: -10
+            }
+        }
+    }
 
     Connections {
         target: ImageExporter
@@ -191,60 +392,11 @@ ApplicationWindow {
                 anchors.fill: parent
                 spacing: 8
 
-                MaterialButton {
-                    Layout.fillWidth: true
-                    text: "Upload Image"
-                    onClicked: {
-                        console.log("Upload button clicked, platform:", Qt.platform.os)
-                        if (Qt.platform.os === "wasm") {
-                            console.log("Using FileHandler")
-                            FileHandler.openFileDialog()
-                        } else {
-                            console.log("Using native file dialog")
-                            fileDialog.open()
-                        }
-                    }
-                }
-
-                MaterialButton {
-                    Layout.fillWidth: true
-                    text: "Save Image"
-                    enabled: mainWindow.currentImageSource !== ""
-                    onClicked: {
-                        if (Qt.platform.os === "wasm") {
-                            ImageExporter.openSaveDialog(imageContainer)
-                        } else {
-                            saveFileDialog.generateFileName()
-                            saveFileDialog.open()
-                        }
-                    }
-                }
-
-                MaterialButton {
-                    Layout.fillWidth: true
-                    text: "Add Text Layer"
-                    enabled: mainWindow.currentImageSource !== ""
-                    onClicked: {
-                        var textItem = textComponent.createObject(imageContainer, {
-                            x: 50,
-                            y: 50
-                        })
-                        mainWindow.addItemToModel(textItem)
-                        mainWindow.selectItem(textItem)  // Explicitly select the new item
-                    }
-                }
-
-                MaterialButton {
-                    Layout.fillWidth: true
-                    text: "Add Image Layer"
-                    enabled: mainWindow.currentImageSource !== ""
-                    onClicked: {
-                        if (Qt.platform.os === "wasm") {
-                            FileHandler.openLayerImageDialog()
-                        } else {
-                            layerImageDialog.open()
-                        }
-                    }
+                Label {
+                    font.pixelSize: 18
+                    font.bold: true
+                    text: "Background Properties"
+                    visible: mainWindow.currentImageSource !== ""
                 }
 
                 RowLayout {
@@ -286,7 +438,7 @@ ApplicationWindow {
                 }
 
                 Label {
-                    font.pixelSize: 20
+                    font.pixelSize: 18
                     font.bold: true
                     text: "Text Properties"
                     visible: mainWindow.selectedTextItem !== null && mainWindow.selectedTextItem.hasOwnProperty('textContent')
@@ -435,7 +587,7 @@ ApplicationWindow {
                 Label {
                     text: "Image Properties"
                     visible: mainWindow.selectedTextItem !== null && !mainWindow.selectedTextItem.hasOwnProperty('textContent')
-                    font.pixelSize: 20
+                    font.pixelSize: 18
                     font.bold: true
                 }
 
@@ -469,6 +621,14 @@ ApplicationWindow {
                 Item {
                     Layout.fillHeight: true
                 }
+            }
+
+            Label {
+                text: "Controls"
+                opacity: 0.5
+                font.pixelSize: 18
+                anchors.centerIn: parent
+                visible: mainWindow.currentImageSource === ""
             }
         }
 
@@ -567,8 +727,8 @@ ApplicationWindow {
                                     id: rightRect
                                     Layout.fillWidth: true
                                     Layout.fillHeight: true
-                                    color: delegateRoot.model.isSelected ? "#40F48FB1" : "transparent"
-                                    border.color: delegateRoot.model.isSelected ? "#F48FB1" : "#333"
+                                    color: delegateRoot.model.isSelected ? Colors.accentColorDimmed : "transparent"
+                                    border.color: delegateRoot.model.isSelected ? Colors.accentColor : "#333"
                                     border.width: 2
                                     radius: Material.ExtraSmallScale
 
@@ -692,9 +852,9 @@ ApplicationWindow {
 
                 Rectangle {
                     anchors.fill: parent
-                    color: "#40F48FB1"
+                    color: Colors.accentColorDimmed
                     border.width: 2
-                    border.color: "#F48FB1"
+                    border.color: Colors.accentColor
                     radius: Material.ExtraSmallScale
                 }
             }
@@ -777,7 +937,7 @@ ApplicationWindow {
                 Rectangle {
                     anchors.fill: parent
                     radius: width / 2
-                    color: "#F48FB1"
+                    color: Colors.accentColor
                     border.color: "#ffffff"
                     border.width: 1
                 }
@@ -816,7 +976,7 @@ ApplicationWindow {
 
                 Rectangle {
                     anchors.fill: parent
-                    color: "#F48FB1"
+                    color: Colors.accentColor
                     bottomRightRadius: Material.ExtraSmallScale
                 }
             }
@@ -846,9 +1006,9 @@ ApplicationWindow {
                 // Selection border - now rotates with content
                 Rectangle {
                     anchors.fill: parent
-                    color: imageRect.selected ? "#40F48FB1" : "transparent"
+                    color: imageRect.selected ? Colors.accentColorDimmed : "transparent"
                     border.width: imageRect.selected ? 2 : 0
-                    border.color: "#F48FB1"
+                    border.color: Colors.accentColor
                     radius: Material.ExtraSmallScale
                 }
 
@@ -921,7 +1081,7 @@ ApplicationWindow {
                 Rectangle {
                     anchors.fill: parent
                     radius: width / 2
-                    color: "#F48FB1"
+                    color: Colors.accentColor
                     border.color: "#ffffff"
                     border.width: 1
                 }
@@ -960,7 +1120,7 @@ ApplicationWindow {
 
                 Rectangle {
                     anchors.fill: parent
-                    color: "#F48FB1"
+                    color: Colors.accentColor
                     bottomRightRadius: Material.ExtraSmallScale
                 }
             }

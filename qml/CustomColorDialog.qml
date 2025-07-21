@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls.Material
 import QtQuick.Layouts
+import Odizinne.QuickEdits
 
 Dialog {
     id: root
@@ -33,7 +34,6 @@ Dialog {
         anchors.fill: parent
         spacing: 15
 
-        // Preview
         Rectangle {
             radius: Material.ExtraSmallScale
             Layout.fillWidth: true
@@ -43,42 +43,41 @@ Dialog {
             border.width: 1
         }
 
-
-        // Color picker area
         RowLayout {
             Layout.fillWidth: true
-            spacing: 10
+            spacing: 15
 
-            // Saturation-Value square
             Rectangle {
-                radius: Material.ExtraSmallScale
                 id: svRect
-                //Layout.preferredWidth: 200
                 Layout.fillWidth: true
                 Layout.preferredHeight: width
-                color: "#00000000"
-                border.color: root.palette.window
-                border.width: 1
 
-                // Black to transparent overlay for value (top to bottom - REVERTED)
+                gradient: Gradient {
+                    GradientStop {
+                        position: 0.0
+                        color: Qt.hsva(svRect.getCurrentHue(), 0, 1, 1) // Top-left: white
+                    }
+                    GradientStop {
+                        position: 1.0
+                        color: Qt.hsva(svRect.getCurrentHue(), 1, 1, 1) // Top-right: pure hue
+                    }
+                    orientation: Gradient.Horizontal
+                }
+
+                // Add vertical gradient overlay for the brightness variation
                 Rectangle {
-                    radius: Material.ExtraSmallScale
                     anchors.fill: parent
                     gradient: Gradient {
-                        GradientStop { position: 0.0; color: "#00000000" }  // Transparent at top
-                        GradientStop { position: 1.0; color: "#ff000000" }  // Black at bottom
+                        GradientStop { position: 0.0; color: "transparent" }
+                        GradientStop { position: 1.0; color: "#ff000000" }
                     }
                 }
 
-                // White to transparent overlay for saturation (right to left - KEPT)
-                Rectangle {
-                    radius: Material.ExtraSmallScale
-                    anchors.fill: parent
-                    gradient: Gradient {
-                        orientation: Gradient.Horizontal
-                        GradientStop { position: 0.0; color: "#ffffffff" }  // Full white on left
-                        GradientStop { position: 1.0; color: "#00ffffff" }  // Transparent white on right
+                function getCurrentHue() {
+                    if (hueCursor.parent && hueCursor.parent.height > hueCursor.height) {
+                        return (hueCursor.y + hueCursor.height/2) / hueCursor.parent.height
                     }
+                    return 0
                 }
 
                 Rectangle {
@@ -87,10 +86,10 @@ Dialog {
                     height: 18
                     radius: width / 2
                     color: root.currentColor
-                    border.color: "#ffffff"
+                    border.color: Colors.handleColor
                     border.width: 2
-                    x: parent.width - width
-                    y: 0
+                    x: parent.width - width/2
+                    y: -height/2
 
                     onXChanged: root.updateColorFromCursors()
                     onYChanged: root.updateColorFromCursors()
@@ -100,29 +99,32 @@ Dialog {
                         anchors.margins: -10
                         drag.target: parent
                         drag.axis: Drag.XAndYAxis
-                        drag.minimumX: 0
-                        drag.maximumX: parent.parent.width - parent.width
-                        drag.minimumY: 0
-                        drag.maximumY: parent.parent.height - parent.height
+                        drag.minimumX: -parent.width/2
+                        drag.maximumX: parent.parent.width - parent.width/2
+                        drag.minimumY: -parent.height/2
+                        drag.maximumY: parent.parent.height - parent.height/2
                     }
                 }
 
                 MouseArea {
                     anchors.fill: parent
                     onPressed: {
-                        svCursor.x = Math.max(0, Math.min(width - svCursor.width, mouseX - svCursor.width/2))
-                        svCursor.y = Math.max(0, Math.min(height - svCursor.height, mouseY - svCursor.height/2))
+                        var newX = Math.max(-svCursor.width/2, Math.min(width - svCursor.width/2, mouseX - svCursor.width/2))
+                        var newY = Math.max(-svCursor.height/2, Math.min(height - svCursor.height/2, mouseY - svCursor.height/2))
+                        svCursor.x = newX
+                        svCursor.y = newY
                     }
                     onPositionChanged: {
                         if (pressed) {
-                            svCursor.x = Math.max(0, Math.min(width - svCursor.width, mouseX - svCursor.width/2))
-                            svCursor.y = Math.max(0, Math.min(height - svCursor.height, mouseY - svCursor.height/2))
+                            var newX = Math.max(-svCursor.width/2, Math.min(width - svCursor.width/2, mouseX - svCursor.width/2))
+                            var newY = Math.max(-svCursor.height/2, Math.min(height - svCursor.height/2, mouseY - svCursor.height/2))
+                            svCursor.x = newX
+                            svCursor.y = newY
                         }
                     }
                 }
             }
 
-            // Vertical hue gradient bar
             Rectangle {
                 radius: Material.ExtraSmallScale
                 Layout.preferredWidth: 10
@@ -144,42 +146,44 @@ Dialog {
                     height: 18
                     radius: width / 2
                     color: {
-                        // Get current hue value
-                        var currentHue = y / (parent.height - height)
-                        return Qt.hsva(currentHue, 1, 1, 1)  // Max saturation and value
+                        var currentHue = (y + height/2) / parent.height
+                        return Qt.hsva(currentHue, 1, 1, 1)
                     }
-                    border.color: "#ffffff"
+                    border.color: Colors.handleColor
                     border.width: 2
-                    x: (parent.width - width) / 2  // Center horizontally
-                    y: 0
+                    x: (parent.width - width) / 2
+                    y: -height/2
 
-                    onYChanged: root.updateColorFromCursors()
+                    onYChanged: {
+                        root.updateColorFromCursors()
+                    }
 
                     MouseArea {
                         anchors.fill: parent
                         anchors.margins: -10
                         drag.target: parent
                         drag.axis: Drag.YAxis
-                        drag.minimumY: 0
-                        drag.maximumY: parent.parent.height - parent.height
+                        drag.minimumY: -parent.height/2
+                        drag.maximumY: parent.parent.height - parent.height/2
                     }
                 }
 
                 MouseArea {
                     anchors.fill: parent
                     onPressed: {
-                        hueCursor.y = Math.max(0, Math.min(height - hueCursor.height, mouseY - hueCursor.height/2))
+                        var newY = Math.max(-hueCursor.height/2, Math.min(height - hueCursor.height/2, mouseY - hueCursor.height/2))
+                        hueCursor.y = newY
                     }
                     onPositionChanged: {
                         if (pressed) {
-                            hueCursor.y = Math.max(0, Math.min(height - hueCursor.height, mouseY - hueCursor.height/2))
+                            var newY = Math.max(-hueCursor.height/2, Math.min(height - hueCursor.height/2, mouseY - hueCursor.height/2))
+                            hueCursor.y = newY
                         }
                     }
                 }
             }
         }
 
-        // Hex input
         RowLayout {
             Layout.fillWidth: true
 
@@ -204,9 +208,9 @@ Dialog {
         if (hueCursor.parent && svRect.width > 0 && svRect.height > 0) {
             updatingFromCursors = true
 
-            var hue = hueCursor.y / (hueCursor.parent.height - hueCursor.height)
-            var sat = svCursor.x / (svRect.width - svCursor.width)
-            var val = 1.0 - (svCursor.y / (svRect.height - svCursor.height))
+            var hue = (hueCursor.y + hueCursor.height/2) / hueCursor.parent.height
+            var sat = (svCursor.x + svCursor.width/2) / svRect.width
+            var val = 1.0 - ((svCursor.y + svCursor.height/2) / svRect.height)
 
             hue = Math.max(0, Math.min(1, hue))
             sat = Math.max(0, Math.min(1, sat))
@@ -215,16 +219,12 @@ Dialog {
             root.currentColor = Qt.hsva(hue, sat, val, 1)
             hexField.text = root.currentColor.toString()
 
-            // Update SV rect background color based on hue
-            svRect.color = Qt.hsva(hue, 1, 1, 1)
-
             updatingFromCursors = false
         }
     }
 
     function updateCursorsFromColor() {
         if (!updatingFromCursors && hueCursor.parent && svRect.width > 0) {
-            // Manual HSV conversion since Qt.colorToHsva might not be available
             var r = root.currentColor.r
             var g = root.currentColor.g
             var b = root.currentColor.b
@@ -249,12 +249,9 @@ Dialog {
                 if (h < 0) h += 1
             }
 
-            hueCursor.y = h * (hueCursor.parent.height - hueCursor.height)
-            svCursor.x = s * (svRect.width - svCursor.width)
-            svCursor.y = (1.0 - v) * (svRect.height - svCursor.height)
-
-            // Update SV rect background
-            svRect.color = Qt.hsva(h, 1, 1, 1)
+            hueCursor.y = h * hueCursor.parent.height - hueCursor.height/2
+            svCursor.x = s * svRect.width - svCursor.width/2
+            svCursor.y = (1.0 - v) * svRect.height - svCursor.height/2
         }
     }
 
