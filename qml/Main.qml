@@ -208,6 +208,7 @@ ApplicationWindow {
                 icon.height: 20
                 flat: true
                 visible: Qt.platform.os === "wasm"
+                Material.foreground: "white"
                 onClicked: {
                     downloadPopup.open()
                 }
@@ -217,6 +218,12 @@ ApplicationWindow {
                 Layout.leftMargin: 10
                 Layout.rightMargin: 10
                 visible: Qt.platform.os === "wasm"
+                contentItem: Rectangle {
+                    implicitWidth: 1
+                    implicitHeight: 38
+                    color: "#FFFFFF"
+                    opacity: 0.3
+                }
             }
 
             Button {
@@ -224,6 +231,7 @@ ApplicationWindow {
                 text: qsTr("Github")
                 icon.source: "qrc:/icons/github.svg"
                 Layout.preferredWidth: parent.rightButtonWidth
+                Material.foreground: "white"
                 icon.color: "white"
                 icon.width: 20
                 icon.height: 20
@@ -240,6 +248,7 @@ ApplicationWindow {
                 Layout.leftMargin: 8
                 icon.source: "qrc:/icons/donate.svg"
                 Layout.preferredWidth: parent.rightButtonWidth
+                Material.foreground: "white"
                 icon.color: Material.accent
                 icon.width: 20
                 icon.height: 20
@@ -254,6 +263,12 @@ ApplicationWindow {
             ToolSeparator {
                 Layout.leftMargin: 10
                 Layout.rightMargin: 10
+                contentItem: Rectangle {
+                    implicitWidth: 1
+                    implicitHeight: 38
+                    color: "#FFFFFF"
+                    opacity: 0.3
+                }
             }
 
             Item {
