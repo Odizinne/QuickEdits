@@ -125,12 +125,27 @@ ApplicationWindow {
                         text: "Save Image"
                         enabled: mainWindow.currentImageSource !== ""
                         onClicked: {
-                            if (Qt.platform.os === "wasm") {
-                                ImageExporter.openSaveDialog(imageContainer)
-                            } else {
-                                saveFileDialog.generateFileName()
-                                saveFileDialog.open()
-                            }
+                            // Temporarily store current transform
+                            var originalZoom = mainWindow.zoomFactor
+                            var originalRotation = mainWindow.imageRotation
+
+                            // Reset to original size and rotation for export
+                            mainWindow.zoomFactor = 1.0
+                            mainWindow.imageRotation = 0
+
+                            // Wait a frame for the transform to apply, then proceed
+                            Qt.callLater(function() {
+                                if (Qt.platform.os === "wasm") {
+                                    ImageExporter.openSaveDialog(scaledContent)  // Use scaledContent instead of imageContainer
+                                } else {
+                                    saveFileDialog.generateFileName()
+                                    saveFileDialog.open()
+                                }
+
+                                // Restore original transform
+                                mainWindow.zoomFactor = originalZoom
+                                mainWindow.imageRotation = originalRotation
+                            })
                         }
                     }
                 }
@@ -356,7 +371,22 @@ ApplicationWindow {
 
         onFileNameAccepted: function(fileName) {
             console.log("QML: Save dialog accepted with filename:", fileName)
-            ImageExporter.saveImage(imageContainer, fileName)
+
+            // Store and reset transform for WASM save too
+            var originalZoom = mainWindow.zoomFactor
+            var originalRotation = mainWindow.imageRotation
+
+            mainWindow.zoomFactor = 1.0
+            mainWindow.imageRotation = 0
+
+            Qt.callLater(function() {
+                ImageExporter.saveImage(scaledContent, fileName)  // Use scaledContent instead of imageContainer
+
+                // Restore transform
+                mainWindow.zoomFactor = originalZoom
+                mainWindow.imageRotation = originalRotation
+            })
+
             donatePopup.visible = UserSettings.displayDonate
         }
 
@@ -430,7 +460,20 @@ ApplicationWindow {
         }
 
         onAccepted: {
-            ImageExporter.saveImage(imageContainer, selectedFile)
+            // Store and reset transform for native save too
+            var originalZoom = mainWindow.zoomFactor
+            var originalRotation = mainWindow.imageRotation
+
+            mainWindow.zoomFactor = 1.0
+            mainWindow.imageRotation = 0
+
+            Qt.callLater(function() {
+                ImageExporter.saveImage(scaledContent, selectedFile)
+
+                // Restore transform
+                mainWindow.zoomFactor = originalZoom
+                mainWindow.imageRotation = originalRotation
+            })
         }
     }
 
