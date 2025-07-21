@@ -16,11 +16,13 @@ set(SOURCES
     src/main.cpp
     src/imageexporter.cpp
     src/filehandler.cpp
+    src/usersettings.cpp
 )
 
 set(HEADERS
     include/imageexporter.h
     include/filehandler.h
+    include/usersettings.h
 )
 
 set(QML_FILES
@@ -29,12 +31,23 @@ set(QML_FILES
     qml/CustomColorDialog.qml
     qml/MaterialButton.qml
     qml/SaveNamingDialog.qml
+    qml/DonatePopup.qml
+)
+
+set(QML_SINGLETONS
+    #qml/Singletons/UserSettings.qml
+    qml/Singletons/Constants.qml
+)
+
+set_source_files_properties(${QML_SINGLETONS}
+    PROPERTIES QT_QML_SINGLETON_TYPE TRUE
 )
 
 qt_add_executable(${CMAKE_PROJECT_NAME}
     ${SOURCES}
     ${HEADERS}
     resources/fonts/fonts.qrc
+    resources/icons/icons.qrc
 )
 
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
@@ -44,7 +57,7 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
 qt_add_qml_module(${CMAKE_PROJECT_NAME}
     URI Odizinne.QuickEdits
     VERSION 1.0
-    QML_FILES ${QML_FILES}
+    QML_FILES ${QML_FILES} ${QML_SINGLETONS}
 )
 
 # WebAssembly specific settings

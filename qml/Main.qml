@@ -68,6 +68,7 @@ ApplicationWindow {
         onFileNameAccepted: function(fileName) {
             console.log("QML: Save dialog accepted with filename:", fileName)
             ImageExporter.saveImage(imageContainer, fileName)
+            donatePopup.visible = true
         }
 
         onFileNameRejected: {
@@ -142,6 +143,10 @@ ApplicationWindow {
     Component.onCompleted: {
         mainLyt.opacity = 1
         Qt.fontFamilies()
+    }
+
+    DonatePopup {
+        id: donatePopup
     }
 
     FontLoader {
