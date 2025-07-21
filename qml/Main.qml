@@ -1099,7 +1099,7 @@ ApplicationWindow {
             property alias itemLayer: textRect.z
             property bool selected: false
 
-            // Selection border - fixed sizes, no zoom division
+            // Selection border - fixed sizes, compensated for zoom
             Item {
                 anchors.fill: parent
                 visible: parent.selected
@@ -1107,9 +1107,9 @@ ApplicationWindow {
                 Rectangle {
                     anchors.fill: parent
                     color: Colors.accentColorDimmed
-                    border.width: 2
+                    border.width: 2 / mainWindow.zoomFactor
                     border.color: Colors.accentColor
-                    radius: Material.ExtraSmallScale
+                    radius: Material.ExtraSmallScale / mainWindow.zoomFactor
                 }
             }
 
@@ -1127,9 +1127,9 @@ ApplicationWindow {
 
             MouseArea {
                 anchors.fill: parent
-                anchors.rightMargin: 8
-                anchors.bottomMargin: 8
-                anchors.topMargin: 15 // Leave space for rotation handle
+                anchors.rightMargin: 8 / mainWindow.zoomFactor
+                anchors.bottomMargin: 8 / mainWindow.zoomFactor
+                anchors.topMargin: 15 / mainWindow.zoomFactor // Leave space for rotation handle
                 drag.target: parent
                 drag.minimumX: 0
                 drag.maximumX: scaledContent.width - parent.width
@@ -1145,14 +1145,14 @@ ApplicationWindow {
                 }
             }
 
-            // Rotation handle - fixed size
+            // Rotation handle - fixed size compensated for zoom
             MouseArea {
                 id: rotationHandle
-                width: 12
-                height: 12
+                width: 12 / mainWindow.zoomFactor
+                height: 12 / mainWindow.zoomFactor
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.top: parent.top
-                anchors.topMargin: -6
+                anchors.topMargin: -6 / mainWindow.zoomFactor
                 visible: parent.selected
                 cursorShape: Qt.OpenHandCursor
 
@@ -1161,9 +1161,7 @@ ApplicationWindow {
                 property real startAngle
 
                 onPressed: {
-                    // Disable flickable dragging
                     imageFlickable.allowDrag = false
-
                     centerX = textRect.width/2
                     centerY = textRect.height/2
                     var localMouse = mapToItem(textRect, mouseX, mouseY)
@@ -1172,7 +1170,6 @@ ApplicationWindow {
                 }
 
                 onReleased: {
-                    // Re-enable flickable dragging
                     imageFlickable.allowDrag = true
                     cursorShape = Qt.OpenHandCursor
                 }
@@ -1191,15 +1188,15 @@ ApplicationWindow {
                     radius: width / 2
                     color: Colors.accentColor
                     border.color: "#ffffff"
-                    border.width: 1
+                    border.width: 1 / mainWindow.zoomFactor
                 }
             }
 
-            // Resize handle - fixed size
+            // Resize handle - fixed size compensated for zoom
             MouseArea {
                 id: resizeHandle
-                width: 10
-                height: 10
+                width: 10 / mainWindow.zoomFactor
+                height: 10 / mainWindow.zoomFactor
                 anchors.right: parent.right
                 anchors.bottom: parent.bottom
                 visible: parent.selected
@@ -1209,14 +1206,12 @@ ApplicationWindow {
                 property real lastMouseY
 
                 onPressed: {
-                    // Disable flickable dragging
                     imageFlickable.allowDrag = false
                     lastMouseX = mouseX
                     lastMouseY = mouseY
                 }
 
                 onReleased: {
-                    // Re-enable flickable dragging
                     imageFlickable.allowDrag = true
                 }
 
@@ -1236,7 +1231,7 @@ ApplicationWindow {
                 Rectangle {
                     anchors.fill: parent
                     color: Colors.accentColor
-                    bottomRightRadius: Material.ExtraSmallScale
+                    bottomRightRadius: Material.ExtraSmallScale / mainWindow.zoomFactor
                 }
             }
         }
@@ -1259,16 +1254,16 @@ ApplicationWindow {
             Item {
                 id: rotatingContainer
                 anchors.fill: parent
-                anchors.margins: 2
+                anchors.margins: 2 / mainWindow.zoomFactor
                 rotation: imageRect.imageRotation
 
-                // Selection border - fixed size
+                // Selection border - fixed size compensated for zoom
                 Rectangle {
                     anchors.fill: parent
                     color: imageRect.selected ? Colors.accentColorDimmed : "transparent"
-                    border.width: imageRect.selected ? 2 : 0
+                    border.width: imageRect.selected ? 2 / mainWindow.zoomFactor : 0
                     border.color: Colors.accentColor
-                    radius: Material.ExtraSmallScale
+                    radius: Material.ExtraSmallScale / mainWindow.zoomFactor
                 }
 
                 Image {
@@ -1276,13 +1271,62 @@ ApplicationWindow {
                     anchors.fill: parent
                     fillMode: Image.PreserveAspectFit
                 }
+
+                // Rotation handle - fixed size compensated for zoom
+                MouseArea {
+                    id: rotationHandle
+                    width: 12 / mainWindow.zoomFactor
+                    height: 12 / mainWindow.zoomFactor
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.top: parent.top
+                    anchors.topMargin: -6 / mainWindow.zoomFactor
+                    visible: imageRect.selected
+                    cursorShape: Qt.OpenHandCursor
+
+                    property real centerX
+                    property real centerY
+                    property real startAngle
+
+                    onPressed: {
+                        imageFlickable.allowDrag = false
+                        centerX = imageRect.width/2
+                        centerY = imageRect.height/2
+
+                        var localMouse = mapToItem(imageRect, mouseX, mouseY)
+                        startAngle = Math.atan2(localMouse.y - centerY, localMouse.x - centerX) * 180 / Math.PI - imageRect.imageRotation
+
+                        cursorShape = Qt.ClosedHandCursor
+                    }
+
+                    onReleased: {
+                        imageFlickable.allowDrag = true
+                        cursorShape = Qt.OpenHandCursor
+                    }
+
+                    onPositionChanged: {
+                        if (pressed) {
+                            var localMouse = mapToItem(imageRect, mouseX, mouseY)
+                            var currentAngle = Math.atan2(localMouse.y - centerY, localMouse.x - centerX) * 180 / Math.PI
+
+                            imageRect.imageRotation = currentAngle - startAngle
+                        }
+                    }
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: width / 2
+                        color: Colors.accentColor
+                        border.color: "#ffffff"
+                        border.width: 1 / mainWindow.zoomFactor
+                    }
+                }
             }
 
             MouseArea {
                 anchors.fill: parent
-                anchors.rightMargin: 8
-                anchors.bottomMargin: 8
-                anchors.topMargin: 15 // Leave space for rotation handle
+                anchors.rightMargin: 8 / mainWindow.zoomFactor
+                anchors.bottomMargin: 8 / mainWindow.zoomFactor
+                anchors.topMargin: 15 / mainWindow.zoomFactor // Leave space for rotation handle
                 drag.target: parent
                 drag.minimumX: 0
                 drag.maximumX: scaledContent.width - parent.width
@@ -1294,60 +1338,11 @@ ApplicationWindow {
                 }
             }
 
-            // Rotation handle - fixed size
-            MouseArea {
-                id: rotationHandle
-                width: 12
-                height: 12
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.top: parent.top
-                anchors.topMargin: -6
-                visible: parent.selected
-                cursorShape: Qt.OpenHandCursor
-
-                property real centerX
-                property real centerY
-                property real startAngle
-
-                onPressed: {
-                    imageFlickable.allowDrag = false
-                    centerX = imageRect.width/2
-                    centerY = imageRect.height/2
-
-                    var localMouse = mapToItem(imageRect, mouseX, mouseY)
-                    startAngle = Math.atan2(localMouse.y - centerY, localMouse.x - centerX) * 180 / Math.PI - imageRect.imageRotation
-
-                    cursorShape = Qt.ClosedHandCursor
-                }
-
-                onReleased: {
-                    imageFlickable.allowDrag = true
-                    cursorShape = Qt.OpenHandCursor
-                }
-
-                onPositionChanged: {
-                    if (pressed) {
-                        var localMouse = mapToItem(imageRect, mouseX, mouseY)
-                        var currentAngle = Math.atan2(localMouse.y - centerY, localMouse.x - centerX) * 180 / Math.PI
-
-                        imageRect.imageRotation = currentAngle - startAngle
-                    }
-                }
-
-                Rectangle {
-                    anchors.fill: parent
-                    radius: width / 2
-                    color: Colors.accentColor
-                    border.color: "#ffffff"
-                    border.width: 1
-                }
-            }
-
-            // Resize handle - fixed size
+            // Resize handle - fixed size compensated for zoom
             MouseArea {
                 id: resizeHandle
-                width: 10
-                height: 10
+                width: 10 / mainWindow.zoomFactor
+                height: 10 / mainWindow.zoomFactor
                 anchors.right: parent.right
                 anchors.bottom: parent.bottom
                 visible: parent.selected
@@ -1357,14 +1352,12 @@ ApplicationWindow {
                 property real lastMouseY
 
                 onPressed: {
-                    // Disable flickable dragging
                     imageFlickable.allowDrag = false
                     lastMouseX = mouseX
                     lastMouseY = mouseY
                 }
 
                 onReleased: {
-                    // Re-enable flickable dragging
                     imageFlickable.allowDrag = true
                 }
 
@@ -1384,7 +1377,7 @@ ApplicationWindow {
                 Rectangle {
                     anchors.fill: parent
                     color: Colors.accentColor
-                    bottomRightRadius: Material.ExtraSmallScale
+                    bottomRightRadius: Material.ExtraSmallScale / mainWindow.zoomFactor
                 }
             }
         }
