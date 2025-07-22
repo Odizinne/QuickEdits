@@ -658,7 +658,7 @@ ApplicationWindow {
                         id: txtPropsLyt
                         spacing: 10
                         visible: mainWindow.selectedTextItem !== null && mainWindow.selectedTextItem.hasOwnProperty('textContent')
-                        property int checkBoxWidth: Math.max(boldCheck.implicitWidth, italicCheck.implicitWidth, underlineCheck.implicitWidth, strikeoutCheck.implicitWidth,)
+                        property int checkBoxWidth: Math.max(boldCheck.implicitWidth, italicCheck.implicitWidth, underlineCheck.implicitWidth, strikeoutCheck.implicitWidth) + 20
 
                         Label { text: "Text Content:" }
                         ScrollView {
