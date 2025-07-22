@@ -17,7 +17,7 @@ EMSCRIPTEN_KEEPALIVE void saveFileSelectedCallback(const char* fileName) {
     qDebug() << "saveFileSelectedCallback called with:" << fileName;
     if (g_imageExporter) {
         QString fileNameStr = QString::fromUtf8(fileName);
-        emit g_imageExporter->saveFileSelected(fileNameStr);
+        emit g_imageExporter->saveFileSelected(fileNameStr, 1920, 1080);
     }
 }
 }
@@ -27,7 +27,7 @@ EMSCRIPTEN_KEEPALIVE void saveFileSelectedCallback(const char* fileName) {
 ImageExporter* ImageExporter::m_instance = nullptr;
 
 ImageExporter::ImageExporter(QObject *parent)
-    : QObject(parent)
+    : QObject(parent), m_imageContainer(nullptr)
 {
 #ifdef Q_OS_WASM
     g_imageExporter = this;
@@ -57,12 +57,33 @@ void ImageExporter::openSaveDialog(QQuickItem* imageContainer)
         return;
     }
 
+    // Store the container for later use
+    m_imageContainer = imageContainer;
+
+    // Get the actual size of the content
+    int width = static_cast<int>(imageContainer->width());
+    int height = static_cast<int>(imageContainer->height());
+
+    // Generate suggested filename and emit signal with dimensions
+    QString suggestedName = QString("quickedits_export_%1")
+                                .arg(QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss"));
+
+    emit saveFileSelected(suggestedName, width, height);
+}
+
+void ImageExporter::grabImageAndSave(const QString& fileName, int targetWidth, int targetHeight)
+{
+    if (!m_imageContainer) {
+        qWarning() << "No image container stored";
+        return;
+    }
+
     // Store original selection states and hide all selections
     QList<QQuickItem*> textItems;
     QList<bool> originalSelectionStates;
 
-    for (int i = 0; i < imageContainer->childItems().size(); ++i) {
-        QQuickItem* child = imageContainer->childItems().at(i);
+    for (int i = 0; i < m_imageContainer->childItems().size(); ++i) {
+        QQuickItem* child = m_imageContainer->childItems().at(i);
         if (child->property("selected").isValid()) {
             textItems.append(child);
             originalSelectionStates.append(child->property("selected").toBool());
@@ -71,17 +92,20 @@ void ImageExporter::openSaveDialog(QQuickItem* imageContainer)
     }
 
     bool originalBorderVisibility = true;
-    QQuickItem* imageBorder = imageContainer->findChild<QQuickItem*>("imageBorder");
+    QQuickItem* imageBorder = m_imageContainer->findChild<QQuickItem*>("imageBorder");
     if (imageBorder) {
         originalBorderVisibility = imageBorder->isVisible();
         imageBorder->setVisible(false);
     }
 
-    // Grab the image container without selections
-    QSharedPointer<QQuickItemGrabResult> grabResult = imageContainer->grabToImage();
+    // Calculate scale factor and create target size
+    QSize targetSize(targetWidth, targetHeight);
 
-    connect(grabResult.data(), &QQuickItemGrabResult::ready, [this, grabResult, textItems, originalSelectionStates, imageBorder, originalBorderVisibility]() {
-        // Store the grabbed image
+    // Grab the image container without selections at the target resolution
+    QSharedPointer<QQuickItemGrabResult> grabResult = m_imageContainer->grabToImage(targetSize);
+
+    connect(grabResult.data(), &QQuickItemGrabResult::ready, [this, grabResult, textItems, originalSelectionStates, imageBorder, originalBorderVisibility, fileName]() {
+        // Store the grabbed image (already scaled to target resolution)
         m_grabbedImage = grabResult->image();
 
         // Restore original selection states and border visibility
@@ -93,11 +117,13 @@ void ImageExporter::openSaveDialog(QQuickItem* imageContainer)
             imageBorder->setVisible(originalBorderVisibility);
         }
 
-        // Generate suggested filename and emit signal
-        QString suggestedName = QString("quickedits_export_%1")
-                                    .arg(QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss"));
+        // Now proceed with saving
+#ifdef Q_OS_WASM
+        saveGrabbedImage(fileName);
+#endif
 
-        emit saveFileSelected(suggestedName);
+        // Clear the container reference
+        m_imageContainer = nullptr;
     });
 }
 

@@ -325,10 +325,10 @@ ApplicationWindow {
 
     Connections {
         target: ImageExporter
-        function onSaveFileSelected(fileName) {
-            console.log("QML: Save file selected:", fileName)
-            // For both platforms, show the naming dialog first
+        function onSaveFileSelected(fileName, originalWidth, originalHeight) {
+            console.log("QML: Save file selected:", fileName, "Resolution:", originalWidth + "x" + originalHeight)
             saveNamingDialog.setFileName(fileName)
+            saveNamingDialog.setOriginalResolution(originalWidth, originalHeight)
             saveNamingDialog.open()
         }
     }
@@ -365,16 +365,19 @@ ApplicationWindow {
     SaveNamingDialog {
         id: saveNamingDialog
 
-        onFileNameAccepted: function(fileName) {
-            console.log("QML: Save dialog accepted with filename:", fileName)
+        onFileNameAccepted: function(fileName, width, height) {
+            console.log("QML: Save dialog accepted with filename:", fileName, "Resolution:", width + "x" + height)
 
             if (Qt.platform.os === "wasm") {
-                // WebAssembly: directly save the grabbed image
-                ImageExporter.saveGrabbedImage(fileName)
+                // WebAssembly: grab and save directly
+                ImageExporter.grabImageAndSave(fileName, width, height)
             } else {
-                // Native: open file dialog with the chosen name
-                saveFileDialog.currentFile = Qt.resolvedUrl(saveFileDialog.currentFolder + "/" + fileName)
-                saveFileDialog.open()
+                // Native: grab first, then open file dialog
+                ImageExporter.grabImageAndSave(fileName, width, height)
+                Qt.callLater(function() {
+                    saveFileDialog.currentFile = Qt.resolvedUrl(saveFileDialog.currentFolder + "/" + fileName)
+                    saveFileDialog.open()
+                })
             }
 
             donatePopup.visible = UserSettings.displayDonate
