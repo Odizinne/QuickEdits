@@ -541,265 +541,312 @@ ApplicationWindow {
             Material.background: Colors.paneColor
             Material.elevation: 6
             Material.roundedScale: Material.ExtraSmallScale
-            Layout.preferredWidth: 300
+            Layout.preferredWidth: 325
             Layout.fillHeight: true
 
-            ColumnLayout {
+            ScrollView {
+                id: scrlView
                 anchors.fill: parent
-                spacing: 8
-
-                Label {
-                    font.pixelSize: 18
-                    font.bold: true
-                    text: "Background Properties"
-                    visible: mainWindow.currentImageSource !== ""
-                }
-
-                RowLayout {
-                    visible: mainWindow.currentImageSource !== ""
-                    property int buttonWidth: Math.max(rtLeftBtn.implicitHeight, rtRightBtn.implicitHeight, rtResetBtn.implicitHeight)
-
-                    MaterialButton {
-                        id: rtLeftBtn
-                        text: "↺ Left"
-                        Layout.fillWidth: true
-                        Layout.preferredWidth: parent.buttonWidth
-                        onClicked: {
-                            mainWindow.imageRotation -= 90
-                        }
-                    }
-                    MaterialButton {
-                        id: rtRightBtn
-                        text: "↻ Right"
-                        Layout.fillWidth: true
-                        Layout.preferredWidth: parent.buttonWidth
-                        onClicked: {
-                            mainWindow.imageRotation += 90
-                        }
-                    }
-                    MaterialButton {
-                        id: rtResetBtn
-                        text: "Reset"
-                        Layout.fillWidth: true
-                        Layout.preferredWidth: parent.buttonWidth
-                        onClicked: {
-                            mainWindow.imageRotation = 0
-                        }
-                    }
-                }
+                ScrollBar.vertical.policy: controlsLyt.implicitHeight > height ? ScrollBar.AlwaysOn : ScrollBar.AlwaysOff
+                clip: true
+                property bool sbVisible: ScrollBar.vertical.policy === ScrollBar.AlwaysOn
 
                 ColumnLayout {
-                    visible: mainWindow.currentImageSource !== ""
+                    id: controlsLyt
+                    width: scrlView.sbVisible ? scrlView.width - 25 : scrlView.width
                     spacing: 8
 
                     Label {
-                        text: "Zoom: " + Math.round(mainWindow.zoomFactor * 100) + "%"
-                        font.pixelSize: 12
+                        font.pixelSize: 18
+                        font.bold: true
+                        text: "Background Properties"
+                        visible: mainWindow.currentImageSource !== ""
                     }
 
                     RowLayout {
-                        Layout.fillWidth: true
+                        visible: mainWindow.currentImageSource !== ""
+                        property int buttonWidth: Math.max(rtLeftBtn.implicitHeight, rtRightBtn.implicitHeight, rtResetBtn.implicitHeight)
 
-                        Slider {
-                            id: zoomSlider
+                        MaterialButton {
+                            id: rtLeftBtn
+                            text: "↺ Left"
                             Layout.fillWidth: true
-                            from: mainWindow.effectiveMinZoom
-                            to: mainWindow.maxZoom
-                            value: mainWindow.zoomFactor
-                            stepSize: 0.05
+                            Layout.preferredWidth: parent.buttonWidth
+                            onClicked: {
+                                mainWindow.imageRotation -= 90
+                            }
+                        }
+                        MaterialButton {
+                            id: rtRightBtn
+                            text: "↻ Right"
+                            Layout.fillWidth: true
+                            Layout.preferredWidth: parent.buttonWidth
+                            onClicked: {
+                                mainWindow.imageRotation += 90
+                            }
+                        }
+                        MaterialButton {
+                            id: rtResetBtn
+                            text: "Reset"
+                            Layout.fillWidth: true
+                            Layout.preferredWidth: parent.buttonWidth
+                            onClicked: {
+                                mainWindow.imageRotation = 0
+                            }
+                        }
+                    }
 
-                            onValueChanged: {
-                                if (mainWindow.zoomFactor !== value) {
-                                    mainWindow.zoomFactor = value
+                    ColumnLayout {
+                        visible: mainWindow.currentImageSource !== ""
+                        spacing: 8
+
+                        Label {
+                            text: "Zoom: " + Math.round(mainWindow.zoomFactor * 100) + "%"
+                            font.pixelSize: 12
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+
+                            Slider {
+                                id: zoomSlider
+                                Layout.fillWidth: true
+                                from: mainWindow.effectiveMinZoom
+                                to: mainWindow.maxZoom
+                                value: mainWindow.zoomFactor
+                                stepSize: 0.05
+
+                                onValueChanged: {
+                                    if (mainWindow.zoomFactor !== value) {
+                                        mainWindow.zoomFactor = value
+                                    }
+                                }
+
+                                Connections {
+                                    target: mainWindow
+                                    function onZoomFactorChanged() {
+                                        if (zoomSlider.value !== mainWindow.zoomFactor) {
+                                            zoomSlider.value = mainWindow.zoomFactor
+                                        }
+                                    }
                                 }
                             }
 
-                            Connections {
-                                target: mainWindow
-                                function onZoomFactorChanged() {
-                                    if (zoomSlider.value !== mainWindow.zoomFactor) {
-                                        zoomSlider.value = mainWindow.zoomFactor
+                            MaterialButton {
+                                text: "Reset"
+                                Layout.preferredWidth: 60
+                                onClicked: {
+                                    mainWindow.resetZoom()
+                                }
+                            }
+                        }
+                    }
+
+                    MenuSeparator {
+                        Layout.fillWidth: true
+                        visible: mainWindow.selectedTextItem !== null
+                    }
+
+                    Label {
+                        font.pixelSize: 18
+                        font.bold: true
+                        text: "Text Properties"
+                        visible: mainWindow.selectedTextItem !== null && mainWindow.selectedTextItem.hasOwnProperty('textContent')
+                    }
+
+                    ColumnLayout {
+                        id: txtPropsLyt
+                        spacing: 10
+                        visible: mainWindow.selectedTextItem !== null && mainWindow.selectedTextItem.hasOwnProperty('textContent')
+                        property int checkBoxWidth: Math.max(boldCheck.implicitWidth, italicCheck.implicitWidth, underlineCheck.implicitWidth, strikeoutCheck.implicitWidth,)
+
+                        Label { text: "Text Content:" }
+                        ScrollView {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 100
+
+                            TextArea {
+                                id: textContent
+                                wrapMode: TextArea.Wrap
+                                onTextChanged: {
+                                    if (mainWindow.selectedTextItem && mainWindow.selectedTextItem.hasOwnProperty('textContent')) {
+                                        mainWindow.selectedTextItem.textContent = text
+                                        mainWindow.updateItemPreview(mainWindow.selectedTextItem)
                                     }
                                 }
                             }
                         }
 
+                        Label { text: "Font:" }
+
+                        RowLayout {
+                            ComboBox {
+                                id: fontFamily
+                                Layout.fillWidth: true
+                                model: Qt.fontFamilies()
+                                onCurrentTextChanged: {
+                                    if (mainWindow.selectedTextItem && mainWindow.selectedTextItem.hasOwnProperty('fontFamily')) {
+                                        mainWindow.selectedTextItem.fontFamily = currentText
+                                        mainWindow.updateItemPreview(mainWindow.selectedTextItem)
+                                    }
+                                }
+                            }
+
+                            SpinBox {
+                                id: fontSize
+                                Layout.preferredWidth: 110
+                                editable: true
+                                from: 8
+                                to: 200
+                                value: 24
+                                onValueChanged: {
+                                    if (mainWindow.selectedTextItem && mainWindow.selectedTextItem.hasOwnProperty('fontSize')) {
+                                        mainWindow.selectedTextItem.fontSize = value
+                                        mainWindow.updateItemPreview(mainWindow.selectedTextItem)
+                                    }
+                                }
+                            }
+                        }
+                        RowLayout {
+                            CheckBox {
+                                id: boldCheck
+                                Layout.preferredWidth: txtPropsLyt.checkBoxWidth
+                                text: "Bold"
+                                onCheckedChanged: {
+                                    if (mainWindow.selectedTextItem && mainWindow.selectedTextItem.hasOwnProperty('fontBold'))
+                                    mainWindow.selectedTextItem.fontBold = checked
+                                }
+                            }
+                            CheckBox {
+                                id: italicCheck
+                                Layout.preferredWidth: txtPropsLyt.checkBoxWidth
+                                text: "Italic"
+                                onCheckedChanged: {
+                                    if (mainWindow.selectedTextItem && mainWindow.selectedTextItem.hasOwnProperty('fontItalic'))
+                                    mainWindow.selectedTextItem.fontItalic = checked
+                                }
+                            }
+                        }
+
+                        RowLayout {
+                            CheckBox {
+                                id: underlineCheck
+                                Layout.preferredWidth: txtPropsLyt.checkBoxWidth
+                                text: "Underline"
+                                onCheckedChanged: {
+                                    if (mainWindow.selectedTextItem && mainWindow.selectedTextItem.hasOwnProperty('fontUnderline'))
+                                        mainWindow.selectedTextItem.fontUnderline = checked
+                                }
+                            }
+                            CheckBox {
+                                id: strikeoutCheck
+                                Layout.preferredWidth: txtPropsLyt.checkBoxWidth
+                                text: "Strikeout"
+                                onCheckedChanged: {
+                                    if (mainWindow.selectedTextItem && mainWindow.selectedTextItem.hasOwnProperty('fontStrikeout'))
+                                        mainWindow.selectedTextItem.fontStrikeout = checked
+                                }
+                            }
+                        }
+
                         MaterialButton {
-                            text: "Reset"
-                            Layout.preferredWidth: 60
-                            onClicked: {
-                                mainWindow.resetZoom()
-                            }
-                        }
-                    }
-                }
-
-                MenuSeparator {
-                    Layout.fillWidth: true
-                    visible: mainWindow.selectedTextItem !== null
-                }
-
-                Label {
-                    font.pixelSize: 18
-                    font.bold: true
-                    text: "Text Properties"
-                    visible: mainWindow.selectedTextItem !== null && mainWindow.selectedTextItem.hasOwnProperty('textContent')
-                }
-
-                ColumnLayout {
-                    id: txtPropsLyt
-                    spacing: 10
-                    visible: mainWindow.selectedTextItem !== null && mainWindow.selectedTextItem.hasOwnProperty('textContent')
-                    property int checkBoxWidth: Math.max(boldCheck.implicitWidth, italicCheck.implicitWidth, underlineCheck.implicitWidth, strikeoutCheck.implicitWidth,)
-
-                    Label { text: "Text Content:" }
-                    ScrollView {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 100
-
-                        TextArea {
-                            id: textContent
-                            wrapMode: TextArea.Wrap
-                            onTextChanged: {
-                                if (mainWindow.selectedTextItem && mainWindow.selectedTextItem.hasOwnProperty('textContent')) {
-                                    mainWindow.selectedTextItem.textContent = text
-                                    mainWindow.updateItemPreview(mainWindow.selectedTextItem)
-                                }
-                            }
-                        }
-                    }
-
-                    Label { text: "Font:" }
-
-                    RowLayout {
-                        ComboBox {
-                            id: fontFamily
+                            id: colorButton
                             Layout.fillWidth: true
-                            model: Qt.fontFamilies()
-                            onCurrentTextChanged: {
-                                if (mainWindow.selectedTextItem && mainWindow.selectedTextItem.hasOwnProperty('fontFamily')) {
-                                    mainWindow.selectedTextItem.fontFamily = currentText
-                                    mainWindow.updateItemPreview(mainWindow.selectedTextItem)
+                            Layout.preferredHeight: 40
+                            text: "Text Color"
+                            onClicked: {
+                                colorDialog.selectedColor = colorPicker.selectedColor
+                                colorDialog.currentColor = colorPicker.selectedColor
+                                colorDialog.open()
+                            }
+
+                            // Calculate text color based on background brightness
+                            property real backgroundLuminance: 0.299 * colorPicker.selectedColor.r +
+                                                               0.587 * colorPicker.selectedColor.g +
+                                                               0.114 * colorPicker.selectedColor.b
+
+                            contentItem: Label {
+                                text: colorButton.text
+                                font: colorButton.font
+                                color: colorButton.backgroundLuminance > 0.5 ? "#000000" : "#ffffff"
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                            }
+
+                            background: Rectangle {
+                                color: colorPicker.selectedColor
+                                border.color: "#999"
+                                border.width: 1
+                                radius: Material.ExtraSmallScale
+                            }
+                        }
+
+                        ColorPicker {
+                            id: colorPicker
+                            Layout.fillWidth: true
+                            onSelectedColorChanged: {
+                                if (mainWindow.selectedTextItem && mainWindow.selectedTextItem.hasOwnProperty('textColor'))
+                                mainWindow.selectedTextItem.textColor = selectedColor
+                            }
+                        }
+
+                        MaterialButton {
+                            id: textResetBtn
+                            text: "Reset rotation"
+                            Layout.fillWidth: true
+                            onClicked: {
+                                if (mainWindow.selectedTextItem) {
+                                    mainWindow.selectedTextItem.textRotation = 0
                                 }
                             }
                         }
 
-                        SpinBox {
-                            id: fontSize
-                            Layout.preferredWidth: 110
-                            editable: true
-                            from: 8
-                            to: 200
-                            value: 24
-                            onValueChanged: {
-                                if (mainWindow.selectedTextItem && mainWindow.selectedTextItem.hasOwnProperty('fontSize')) {
-                                    mainWindow.selectedTextItem.fontSize = value
-                                    mainWindow.updateItemPreview(mainWindow.selectedTextItem)
+                        MaterialButton {
+                            Layout.fillWidth: true
+                            text: "Delete Selected Item"
+                            enabled: mainWindow.selectedTextItem !== null
+                            onClicked: {
+                                if (mainWindow.selectedTextItem) {
+                                    mainWindow.deleteItem(mainWindow.selectedTextItem)
                                 }
                             }
                         }
+
+                        Item {
+                            Layout.fillHeight: true
+                        }
                     }
-                    RowLayout {
-                        CheckBox {
-                            id: boldCheck
-                            Layout.preferredWidth: txtPropsLyt.checkBoxWidth
-                            text: "Bold"
-                            onCheckedChanged: {
-                                if (mainWindow.selectedTextItem && mainWindow.selectedTextItem.hasOwnProperty('fontBold'))
-                                mainWindow.selectedTextItem.fontBold = checked
+
+                    Label {
+                        text: "Image Properties"
+                        visible: mainWindow.selectedTextItem !== null && !mainWindow.selectedTextItem.hasOwnProperty('textContent')
+                        font.pixelSize: 18
+                        font.bold: true
+                    }
+
+                    ColumnLayout {
+                        spacing: 10
+                        visible: mainWindow.selectedTextItem !== null && !mainWindow.selectedTextItem.hasOwnProperty('textContent')
+
+                        MaterialButton {
+                            id: imgResetBtn
+                            text: "Reset rotation"
+                            Layout.fillWidth: true
+                            onClicked: {
+                                if (mainWindow.selectedTextItem) {
+                                    mainWindow.selectedTextItem.imageRotation = 0
+                                }
                             }
                         }
-                        CheckBox {
-                            id: italicCheck
-                            Layout.preferredWidth: txtPropsLyt.checkBoxWidth
-                            text: "Italic"
-                            onCheckedChanged: {
-                                if (mainWindow.selectedTextItem && mainWindow.selectedTextItem.hasOwnProperty('fontItalic'))
-                                mainWindow.selectedTextItem.fontItalic = checked
-                            }
-                        }
-                    }
 
-                    RowLayout {
-                        CheckBox {
-                            id: underlineCheck
-                            Layout.preferredWidth: txtPropsLyt.checkBoxWidth
-                            text: "Underline"
-                            onCheckedChanged: {
-                                if (mainWindow.selectedTextItem && mainWindow.selectedTextItem.hasOwnProperty('fontUnderline'))
-                                    mainWindow.selectedTextItem.fontUnderline = checked
-                            }
-                        }
-                        CheckBox {
-                            id: strikeoutCheck
-                            Layout.preferredWidth: txtPropsLyt.checkBoxWidth
-                            text: "Strikeout"
-                            onCheckedChanged: {
-                                if (mainWindow.selectedTextItem && mainWindow.selectedTextItem.hasOwnProperty('fontStrikeout'))
-                                    mainWindow.selectedTextItem.fontStrikeout = checked
-                            }
-                        }
-                    }
-
-                    MaterialButton {
-                        id: colorButton
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 40
-                        text: "Text Color"
-                        onClicked: {
-                            colorDialog.selectedColor = colorPicker.selectedColor
-                            colorDialog.currentColor = colorPicker.selectedColor
-                            colorDialog.open()
-                        }
-
-                        // Calculate text color based on background brightness
-                        property real backgroundLuminance: 0.299 * colorPicker.selectedColor.r +
-                                                           0.587 * colorPicker.selectedColor.g +
-                                                           0.114 * colorPicker.selectedColor.b
-
-                        contentItem: Label {
-                            text: colorButton.text
-                            font: colorButton.font
-                            color: colorButton.backgroundLuminance > 0.5 ? "#000000" : "#ffffff"
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
-
-                        background: Rectangle {
-                            color: colorPicker.selectedColor
-                            border.color: "#999"
-                            border.width: 1
-                            radius: Material.ExtraSmallScale
-                        }
-                    }
-
-                    ColorPicker {
-                        id: colorPicker
-                        Layout.fillWidth: true
-                        onSelectedColorChanged: {
-                            if (mainWindow.selectedTextItem && mainWindow.selectedTextItem.hasOwnProperty('textColor'))
-                            mainWindow.selectedTextItem.textColor = selectedColor
-                        }
-                    }
-
-                    MaterialButton {
-                        id: textResetBtn
-                        text: "Reset rotation"
-                        Layout.fillWidth: true
-                        onClicked: {
-                            if (mainWindow.selectedTextItem) {
-                                mainWindow.selectedTextItem.textRotation = 0
-                            }
-                        }
-                    }
-
-                    MaterialButton {
-                        Layout.fillWidth: true
-                        text: "Delete Selected Item"
-                        enabled: mainWindow.selectedTextItem !== null
-                        onClicked: {
-                            if (mainWindow.selectedTextItem) {
-                                mainWindow.deleteItem(mainWindow.selectedTextItem)
+                        MaterialButton {
+                            Layout.fillWidth: true
+                            text: "Delete Selected Item"
+                            enabled: mainWindow.selectedTextItem !== null
+                            onClicked: {
+                                if (mainWindow.selectedTextItem) {
+                                    mainWindow.deleteItem(mainWindow.selectedTextItem)
+                                }
                             }
                         }
                     }
@@ -807,44 +854,6 @@ ApplicationWindow {
                     Item {
                         Layout.fillHeight: true
                     }
-                }
-
-                Label {
-                    text: "Image Properties"
-                    visible: mainWindow.selectedTextItem !== null && !mainWindow.selectedTextItem.hasOwnProperty('textContent')
-                    font.pixelSize: 18
-                    font.bold: true
-                }
-
-                ColumnLayout {
-                    spacing: 10
-                    visible: mainWindow.selectedTextItem !== null && !mainWindow.selectedTextItem.hasOwnProperty('textContent')
-
-                    MaterialButton {
-                        id: imgResetBtn
-                        text: "Reset rotation"
-                        Layout.fillWidth: true
-                        onClicked: {
-                            if (mainWindow.selectedTextItem) {
-                                mainWindow.selectedTextItem.imageRotation = 0
-                            }
-                        }
-                    }
-
-                    MaterialButton {
-                        Layout.fillWidth: true
-                        text: "Delete Selected Item"
-                        enabled: mainWindow.selectedTextItem !== null
-                        onClicked: {
-                            if (mainWindow.selectedTextItem) {
-                                mainWindow.deleteItem(mainWindow.selectedTextItem)
-                            }
-                        }
-                    }
-                }
-
-                Item {
-                    Layout.fillHeight: true
                 }
             }
 
