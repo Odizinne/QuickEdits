@@ -735,7 +735,7 @@ ApplicationWindow {
                                 text: "Underline"
                                 onCheckedChanged: {
                                     if (mainWindow.selectedTextItem && mainWindow.selectedTextItem.hasOwnProperty('fontUnderline'))
-                                        mainWindow.selectedTextItem.fontUnderline = checked
+                                    mainWindow.selectedTextItem.fontUnderline = checked
                                 }
                             }
                             CheckBox {
@@ -744,7 +744,7 @@ ApplicationWindow {
                                 text: "Strikeout"
                                 onCheckedChanged: {
                                     if (mainWindow.selectedTextItem && mainWindow.selectedTextItem.hasOwnProperty('fontStrikeout'))
-                                        mainWindow.selectedTextItem.fontStrikeout = checked
+                                    mainWindow.selectedTextItem.fontStrikeout = checked
                                 }
                             }
                         }
@@ -790,6 +790,207 @@ ApplicationWindow {
                             }
                         }
 
+                        // Position Section
+                        MenuSeparator { Layout.fillWidth: true }
+
+                        Label {
+                            text: "Position"
+                            font.pixelSize: 16
+                            font.bold: true
+                        }
+
+                        RowLayout {
+                            Label { text: "X:" }
+                            Slider {
+                                id: xPositionSlider
+                                Layout.fillWidth: true
+                                from: 0
+                                to: scaledContent.width - (mainWindow.selectedTextItem ? mainWindow.selectedTextItem.width : 0)
+                                value: mainWindow.selectedTextItem ? mainWindow.selectedTextItem.x : 0
+                                onValueChanged: {
+                                    if (mainWindow.selectedTextItem && value !== mainWindow.selectedTextItem.x) {
+                                        mainWindow.selectedTextItem.x = value
+                                    }
+                                }
+                            }
+                            Label { text: Math.round(xPositionSlider.value) }
+                        }
+
+                        RowLayout {
+                            Label { text: "Y:" }
+                            Slider {
+                                id: yPositionSlider
+                                Layout.fillWidth: true
+                                from: 0
+                                to: scaledContent.height - (mainWindow.selectedTextItem ? mainWindow.selectedTextItem.height : 0)
+                                value: mainWindow.selectedTextItem ? mainWindow.selectedTextItem.y : 0
+                                onValueChanged: {
+                                    if (mainWindow.selectedTextItem && value !== mainWindow.selectedTextItem.y) {
+                                        mainWindow.selectedTextItem.y = value
+                                    }
+                                }
+                            }
+                            Label { text: Math.round(yPositionSlider.value) }
+                        }
+
+                        // Align Section
+                        MenuSeparator { Layout.fillWidth: true }
+
+                        Label {
+                            text: "Align"
+                            font.pixelSize: 16
+                            font.bold: true
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+
+                            MaterialButton {
+                                text: "H Center"
+                                Layout.fillWidth: true
+                                onClicked: {
+                                    if (mainWindow.selectedTextItem) {
+                                        var centerX = (scaledContent.width - mainWindow.selectedTextItem.width) / 2
+                                        mainWindow.selectedTextItem.x = centerX
+                                    }
+                                }
+                            }
+
+                            MaterialButton {
+                                text: "V Center"
+                                Layout.fillWidth: true
+                                onClicked: {
+                                    if (mainWindow.selectedTextItem) {
+                                        var centerY = (scaledContent.height - mainWindow.selectedTextItem.height) / 2
+                                        mainWindow.selectedTextItem.y = centerY
+                                    }
+                                }
+                            }
+                        }
+
+                        // Anchors Section
+                        MenuSeparator { Layout.fillWidth: true }
+
+                        Label {
+                            text: "Anchors"
+                            font.pixelSize: 16
+                            font.bold: true
+                        }
+
+                        Grid {
+                            Layout.fillWidth: true
+                            columns: 3
+                            spacing: 4
+
+                            MaterialButton {
+                                text: "↖"
+                                width: 30
+                                height: 30
+                                onClicked: {
+                                    if (mainWindow.selectedTextItem) {
+                                        mainWindow.selectedTextItem.x = 0
+                                        mainWindow.selectedTextItem.y = 0
+                                    }
+                                }
+                            }
+
+                            MaterialButton {
+                                text: "↑"
+                                width: 30
+                                height: 30
+                                onClicked: {
+                                    if (mainWindow.selectedTextItem) {
+                                        mainWindow.selectedTextItem.x = (scaledContent.width - mainWindow.selectedTextItem.width) / 2
+                                        mainWindow.selectedTextItem.y = 0
+                                    }
+                                }
+                            }
+
+                            MaterialButton {
+                                text: "↗"
+                                width: 30
+                                height: 30
+                                onClicked: {
+                                    if (mainWindow.selectedTextItem) {
+                                        mainWindow.selectedTextItem.x = scaledContent.width - mainWindow.selectedTextItem.width
+                                        mainWindow.selectedTextItem.y = 0
+                                    }
+                                }
+                            }
+
+                            MaterialButton {
+                                text: "←"
+                                width: 30
+                                height: 30
+                                onClicked: {
+                                    if (mainWindow.selectedTextItem) {
+                                        mainWindow.selectedTextItem.x = 0
+                                        mainWindow.selectedTextItem.y = (scaledContent.height - mainWindow.selectedTextItem.height) / 2
+                                    }
+                                }
+                            }
+
+                            MaterialButton {
+                                text: "●"
+                                width: 30
+                                height: 30
+                                onClicked: {
+                                    if (mainWindow.selectedTextItem) {
+                                        mainWindow.selectedTextItem.x = (scaledContent.width - mainWindow.selectedTextItem.width) / 2
+                                        mainWindow.selectedTextItem.y = (scaledContent.height - mainWindow.selectedTextItem.height) / 2
+                                    }
+                                }
+                            }
+
+                            MaterialButton {
+                                text: "→"
+                                width: 30
+                                height: 30
+                                onClicked: {
+                                    if (mainWindow.selectedTextItem) {
+                                        mainWindow.selectedTextItem.x = scaledContent.width - mainWindow.selectedTextItem.width
+                                        mainWindow.selectedTextItem.y = (scaledContent.height - mainWindow.selectedTextItem.height) / 2
+                                    }
+                                }
+                            }
+
+                            MaterialButton {
+                                text: "↙"
+                                width: 30
+                                height: 30
+                                onClicked: {
+                                    if (mainWindow.selectedTextItem) {
+                                        mainWindow.selectedTextItem.x = 0
+                                        mainWindow.selectedTextItem.y = scaledContent.height - mainWindow.selectedTextItem.height
+                                    }
+                                }
+                            }
+
+                            MaterialButton {
+                                text: "↓"
+                                width: 30
+                                height: 30
+                                onClicked: {
+                                    if (mainWindow.selectedTextItem) {
+                                        mainWindow.selectedTextItem.x = (scaledContent.width - mainWindow.selectedTextItem.width) / 2
+                                        mainWindow.selectedTextItem.y = scaledContent.height - mainWindow.selectedTextItem.height
+                                    }
+                                }
+                            }
+
+                            MaterialButton {
+                                text: "↘"
+                                width: 30
+                                height: 30
+                                onClicked: {
+                                    if (mainWindow.selectedTextItem) {
+                                        mainWindow.selectedTextItem.x = scaledContent.width - mainWindow.selectedTextItem.width
+                                        mainWindow.selectedTextItem.y = scaledContent.height - mainWindow.selectedTextItem.height
+                                    }
+                                }
+                            }
+                        }
+
                         MaterialButton {
                             id: textResetBtn
                             text: "Reset rotation"
@@ -827,6 +1028,205 @@ ApplicationWindow {
                     ColumnLayout {
                         spacing: 10
                         visible: mainWindow.selectedTextItem !== null && !mainWindow.selectedTextItem.hasOwnProperty('textContent')
+
+                        // Position Section for Images
+                        Label {
+                            text: "Position"
+                            font.pixelSize: 16
+                            font.bold: true
+                        }
+
+                        RowLayout {
+                            Label { text: "X:" }
+                            Slider {
+                                id: imgXPositionSlider
+                                Layout.fillWidth: true
+                                from: 0
+                                to: scaledContent.width - (mainWindow.selectedTextItem ? mainWindow.selectedTextItem.width : 0)
+                                value: mainWindow.selectedTextItem ? mainWindow.selectedTextItem.x : 0
+                                onValueChanged: {
+                                    if (mainWindow.selectedTextItem && value !== mainWindow.selectedTextItem.x) {
+                                        mainWindow.selectedTextItem.x = value
+                                    }
+                                }
+                            }
+                            Label { text: Math.round(imgXPositionSlider.value) }
+                        }
+
+                        RowLayout {
+                            Label { text: "Y:" }
+                            Slider {
+                                id: imgYPositionSlider
+                                Layout.fillWidth: true
+                                from: 0
+                                to: scaledContent.height - (mainWindow.selectedTextItem ? mainWindow.selectedTextItem.height : 0)
+                                value: mainWindow.selectedTextItem ? mainWindow.selectedTextItem.y : 0
+                                onValueChanged: {
+                                    if (mainWindow.selectedTextItem && value !== mainWindow.selectedTextItem.y) {
+                                        mainWindow.selectedTextItem.y = value
+                                    }
+                                }
+                            }
+                            Label { text: Math.round(imgYPositionSlider.value) }
+                        }
+
+                        // Align Section for Images
+                        MenuSeparator { Layout.fillWidth: true }
+
+                        Label {
+                            text: "Align"
+                            font.pixelSize: 16
+                            font.bold: true
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+
+                            MaterialButton {
+                                text: "H Center"
+                                Layout.fillWidth: true
+                                onClicked: {
+                                    if (mainWindow.selectedTextItem) {
+                                        var centerX = (scaledContent.width - mainWindow.selectedTextItem.width) / 2
+                                        mainWindow.selectedTextItem.x = centerX
+                                    }
+                                }
+                            }
+
+                            MaterialButton {
+                                text: "V Center"
+                                Layout.fillWidth: true
+                                onClicked: {
+                                    if (mainWindow.selectedTextItem) {
+                                        var centerY = (scaledContent.height - mainWindow.selectedTextItem.height) / 2
+                                        mainWindow.selectedTextItem.y = centerY
+                                    }
+                                }
+                            }
+                        }
+
+                        // Anchors Section for Images
+                        MenuSeparator { Layout.fillWidth: true }
+
+                        Label {
+                            text: "Anchors"
+                            font.pixelSize: 16
+                            font.bold: true
+                        }
+
+                        Grid {
+                            Layout.fillWidth: true
+                            columns: 3
+                            spacing: 4
+
+                            MaterialButton {
+                                text: "↖"
+                                width: 30
+                                height: 30
+                                onClicked: {
+                                    if (mainWindow.selectedTextItem) {
+                                        mainWindow.selectedTextItem.x = 0
+                                        mainWindow.selectedTextItem.y = 0
+                                    }
+                                }
+                            }
+
+                            MaterialButton {
+                                text: "↑"
+                                width: 30
+                                height: 30
+                                onClicked: {
+                                    if (mainWindow.selectedTextItem) {
+                                        mainWindow.selectedTextItem.x = (scaledContent.width - mainWindow.selectedTextItem.width) / 2
+                                        mainWindow.selectedTextItem.y = 0
+                                    }
+                                }
+                            }
+
+                            MaterialButton {
+                                text: "↗"
+                                width: 30
+                                height: 30
+                                onClicked: {
+                                    if (mainWindow.selectedTextItem) {
+                                        mainWindow.selectedTextItem.x = scaledContent.width - mainWindow.selectedTextItem.width
+                                        mainWindow.selectedTextItem.y = 0
+                                    }
+                                }
+                            }
+
+                            MaterialButton {
+                                text: "←"
+                                width: 30
+                                height: 30
+                                onClicked: {
+                                    if (mainWindow.selectedTextItem) {
+                                        mainWindow.selectedTextItem.x = 0
+                                        mainWindow.selectedTextItem.y = (scaledContent.height - mainWindow.selectedTextItem.height) / 2
+                                    }
+                                }
+                            }
+
+                            MaterialButton {
+                                text: "●"
+                                width: 30
+                                height: 30
+                                onClicked: {
+                                    if (mainWindow.selectedTextItem) {
+                                        mainWindow.selectedTextItem.x = (scaledContent.width - mainWindow.selectedTextItem.width) / 2
+                                        mainWindow.selectedTextItem.y = (scaledContent.height - mainWindow.selectedTextItem.height) / 2
+                                    }
+                                }
+                            }
+
+                            MaterialButton {
+                                text: "→"
+                                width: 30
+                                height: 30
+                                onClicked: {
+                                    if (mainWindow.selectedTextItem) {
+                                        mainWindow.selectedTextItem.x = scaledContent.width - mainWindow.selectedTextItem.width
+                                        mainWindow.selectedTextItem.y = (scaledContent.height - mainWindow.selectedTextItem.height) / 2
+                                    }
+                                }
+                            }
+
+                            MaterialButton {
+                                text: "↙"
+                                width: 30
+                                height: 30
+                                onClicked: {
+                                    if (mainWindow.selectedTextItem) {
+                                        mainWindow.selectedTextItem.x = 0
+                                        mainWindow.selectedTextItem.y = scaledContent.height - mainWindow.selectedTextItem.height
+                                    }
+                                }
+                            }
+
+                            MaterialButton {
+                                text: "↓"
+                                width: 30
+                                height: 30
+                                onClicked: {
+                                    if (mainWindow.selectedTextItem) {
+                                        mainWindow.selectedTextItem.x = (scaledContent.width - mainWindow.selectedTextItem.width) / 2
+                                        mainWindow.selectedTextItem.y = scaledContent.height - mainWindow.selectedTextItem.height
+                                    }
+                                }
+                            }
+
+                            MaterialButton {
+                                text: "↘"
+                                width: 30
+                                height: 30
+                                onClicked: {
+                                    if (mainWindow.selectedTextItem) {
+                                        mainWindow.selectedTextItem.x = scaledContent.width - mainWindow.selectedTextItem.width
+                                        mainWindow.selectedTextItem.y = scaledContent.height - mainWindow.selectedTextItem.height
+                                    }
+                                }
+                            }
+                        }
 
                         MaterialButton {
                             id: imgResetBtn
@@ -1190,6 +1590,19 @@ ApplicationWindow {
             property alias itemLayer: textRect.z
             property bool selected: false
 
+            // Update position sliders when item position changes
+            onXChanged: {
+                if (mainWindow.selectedTextItem === textRect) {
+                    xPositionSlider.value = x
+                }
+            }
+
+            onYChanged: {
+                if (mainWindow.selectedTextItem === textRect) {
+                    yPositionSlider.value = y
+                }
+            }
+
             // Container that rotates with the content
             Item {
                 id: rotatingContainer
@@ -1360,6 +1773,19 @@ ApplicationWindow {
             property alias itemLayer: imageRect.z
             property real imageRotation: 0
             property bool selected: false
+
+            // Update position sliders when item position changes
+            onXChanged: {
+                if (mainWindow.selectedTextItem === imageRect) {
+                    imgXPositionSlider.value = x
+                }
+            }
+
+            onYChanged: {
+                if (mainWindow.selectedTextItem === imageRect) {
+                    imgYPositionSlider.value = y
+                }
+            }
 
             // Container that rotates with the content
             Item {
@@ -1700,8 +2126,26 @@ ApplicationWindow {
             underlineCheck.checked = selectedTextItem.fontUnderline
             strikeoutCheck.checked = selectedTextItem.fontStrikeout
             colorPicker.selectedColor = selectedTextItem.textColor
+
+            // Update position sliders
+            xPositionSlider.from = 0
+            xPositionSlider.to = scaledContent.width - selectedTextItem.width
+            xPositionSlider.value = selectedTextItem.x
+
+            yPositionSlider.from = 0
+            yPositionSlider.to = scaledContent.height - selectedTextItem.height
+            yPositionSlider.value = selectedTextItem.y
+        } else if (selectedTextItem && !selectedTextItem.hasOwnProperty('textContent')) {
+            // Image item
+            imgXPositionSlider.from = 0
+            imgXPositionSlider.to = scaledContent.width - selectedTextItem.width
+            imgXPositionSlider.value = selectedTextItem.x
+
+            imgYPositionSlider.from = 0
+            imgYPositionSlider.to = scaledContent.height - selectedTextItem.height
+            imgYPositionSlider.value = selectedTextItem.y
         } else {
-            // Clear controls when nothing is selected or image is selected
+            // Clear controls when nothing is selected
             textContent.text = ""
             fontFamily.currentIndex = -1
             fontSize.value = 24
