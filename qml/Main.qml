@@ -1619,7 +1619,7 @@ ApplicationWindow {
                     radius: Material.ExtraSmallScale / mainWindow.zoomFactor
                 }
 
-                TextEdit {
+                Text {
                     id: textEdit
                     anchors.fill: parent
                     anchors.margins: 10
@@ -1627,7 +1627,7 @@ ApplicationWindow {
                     font.family: "Arial"
                     font.pixelSize: 24
                     color: Colors.placeholderColor
-                    selectByMouse: false
+                    //selectByMouse: false
                     wrapMode: TextEdit.Wrap
                 }
 
