@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(QuickEdits VERSION 0.1.2 LANGUAGES CXX)
+project(QuickEdits VERSION 0.1.3 LANGUAGES CXX)
 
 set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH "Installation directory" FORCE)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
