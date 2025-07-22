@@ -12,5 +12,6 @@
         <file>center.svg</file>
         <file>side.svg</file>
         <file>corner.svg</file>
+        <file>font.svg</file>
     </qresource>
 </RCC>

@@ -98,7 +98,7 @@ ApplicationWindow {
             anchors.fill: parent
             anchors.rightMargin: 15
             spacing: 0
-            property int buttonWidth: Math.max(fileBtn.implicitWidth, layersBtn.implicitWidth) + 20
+            property int buttonWidth: Math.max(fileBtn.implicitWidth, layersBtn.implicitWidth, fontsBtn.implicitWidth) + 20
             property int rightButtonWidth: Math.max(donateButton.implicitWidth, githubButton.implicitWidth) + 20
 
 
@@ -176,6 +176,32 @@ ApplicationWindow {
                             } else {
                                 layerImageDialog.open()
                             }
+                        }
+                    }
+                }
+            }
+
+            ToolButton {
+                id: fontsBtn
+                text: "Fonts"
+                Layout.preferredHeight: 50
+                Layout.preferredWidth: parent.buttonWidth
+                icon.source: "qrc:/icons/font.svg"
+                icon.color: "white"
+                Material.foreground: "white"
+                icon.width: 16
+                icon.height: 16
+                onClicked: fontsMenu.visible = !fontsMenu.visible
+
+
+                Menu {
+                    id: fontsMenu
+                    y: 50
+
+                    MenuItem {
+                        text: "Manage Fonts..."
+                        onClicked: {
+                            fontManagerDialog.open()
                         }
                     }
                 }
@@ -443,6 +469,11 @@ ApplicationWindow {
         Qt.fontFamilies()
     }
 
+    FontManagerDialog {
+        id: fontManagerDialog
+        anchors.centerIn: parent
+    }
+
     DonatePopup {
         id: donatePopup
         anchors.centerIn: parent
@@ -622,7 +653,7 @@ ApplicationWindow {
                             ComboBox {
                                 id: fontFamily
                                 Layout.fillWidth: true
-                                model: Qt.fontFamilies()
+                                model: FontManager.availableFonts
                                 onCurrentTextChanged: {
                                     if (mainWindow.selectedTextItem && mainWindow.selectedTextItem.hasOwnProperty('fontFamily')) {
                                         mainWindow.selectedTextItem.fontFamily = currentText

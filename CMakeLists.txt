@@ -16,11 +16,13 @@ set(SOURCES
     src/main.cpp
     src/imageexporter.cpp
     src/filehandler.cpp
+    src/fontmanager.cpp
 )
 
 set(HEADERS
     include/imageexporter.h
     include/filehandler.h
+    include/fontmanager.h
 )
 
 set(QML_FILES
@@ -59,6 +61,7 @@ qt_add_qml_module(${CMAKE_PROJECT_NAME}
     URI Odizinne.QuickEdits
     VERSION 1.0
     QML_FILES ${QML_FILES} ${QML_SINGLETONS}
+    QML_FILES qml/FontManagerDialog.qml
 )
 
 # WebAssembly specific settings
@@ -74,7 +77,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
         "-sALLOW_MEMORY_GROWTH=1"
         "-sFILESYSTEM=1"
         "-sEXPORTED_RUNTIME_METHODS=['FS','stringToUTF8','lengthBytesUTF8']"
-        "-sEXPORTED_FUNCTIONS=['_main','_fileSelectedCallback','_layerImageSelectedCallback','_saveFileSelectedCallback','_malloc','_free']"
+        "-sEXPORTED_FUNCTIONS=['_main','_fileSelectedCallback','_layerImageSelectedCallback','_saveFileSelectedCallback','_fontSelectedCallback','_malloc','_free']"
     )
 else()
     # Native platforms only
