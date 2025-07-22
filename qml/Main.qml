@@ -833,6 +833,28 @@ ApplicationWindow {
                             Label { text: Math.round(yPositionSlider.value) }
                         }
 
+                        Connections {
+                            target: mainWindow.selectedTextItem
+                            function onWidthChanged() {
+                                if (mainWindow.selectedTextItem && mainWindow.selectedTextItem.hasOwnProperty('textContent')) {
+                                    xPositionSlider.to = scaledContent.width - mainWindow.selectedTextItem.width
+                                    // Clamp current position if it's now out of bounds
+                                    if (xPositionSlider.value > xPositionSlider.to) {
+                                        mainWindow.selectedTextItem.x = xPositionSlider.to
+                                    }
+                                }
+                            }
+                            function onHeightChanged() {
+                                if (mainWindow.selectedTextItem && mainWindow.selectedTextItem.hasOwnProperty('textContent')) {
+                                    yPositionSlider.to = scaledContent.height - mainWindow.selectedTextItem.height
+                                    // Clamp current position if it's now out of bounds
+                                    if (yPositionSlider.value > yPositionSlider.to) {
+                                        mainWindow.selectedTextItem.y = yPositionSlider.to
+                                    }
+                                }
+                            }
+                        }
+
                         // Align Section
                         MenuSeparator { Layout.fillWidth: true }
 
@@ -1068,6 +1090,28 @@ ApplicationWindow {
                                 }
                             }
                             Label { text: Math.round(imgYPositionSlider.value) }
+                        }
+
+                        Connections {
+                            target: mainWindow.selectedTextItem
+                            function onWidthChanged() {
+                                if (mainWindow.selectedTextItem && !mainWindow.selectedTextItem.hasOwnProperty('textContent')) {
+                                    imgXPositionSlider.to = scaledContent.width - mainWindow.selectedTextItem.width
+                                    // Clamp current position if it's now out of bounds
+                                    if (imgXPositionSlider.value > imgXPositionSlider.to) {
+                                        mainWindow.selectedTextItem.x = imgXPositionSlider.to
+                                    }
+                                }
+                            }
+                            function onHeightChanged() {
+                                if (mainWindow.selectedTextItem && !mainWindow.selectedTextItem.hasOwnProperty('textContent')) {
+                                    imgYPositionSlider.to = scaledContent.height - mainWindow.selectedTextItem.height
+                                    // Clamp current position if it's now out of bounds
+                                    if (imgYPositionSlider.value > imgYPositionSlider.to) {
+                                        mainWindow.selectedTextItem.y = imgYPositionSlider.to
+                                    }
+                                }
+                            }
                         }
 
                         // Align Section for Images
