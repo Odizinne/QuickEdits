@@ -479,21 +479,6 @@ ApplicationWindow {
         anchors.centerIn: parent
     }
 
-    FontLoader {
-        id: customFont1
-        source: "qrc:/fonts/RUNE.ttf"
-    }
-
-    FontLoader {
-        id: customFont2
-        source: "qrc:/fonts/CloisterBlack.ttf"
-    }
-
-    FontLoader {
-        id: customFont3
-        source: "qrc:/fonts/MessySketch-Regular.ttf"
-    }
-
     DownloadPopup {
         id: downloadPopup
         anchors.centerIn: parent
