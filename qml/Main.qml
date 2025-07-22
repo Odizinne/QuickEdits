@@ -647,9 +647,10 @@ ApplicationWindow {
                 }
 
                 ColumnLayout {
+                    id: txtPropsLyt
                     spacing: 10
                     visible: mainWindow.selectedTextItem !== null && mainWindow.selectedTextItem.hasOwnProperty('textContent')
-
+                    property int checkBoxWidth: Math.max(boldCheck.implicitWidth, italicCheck.implicitWidth, underlineCheck.implicitWidth, strikeoutCheck.implicitWidth,)
 
                     Label { text: "Text Content:" }
                     ScrollView {
@@ -698,10 +699,10 @@ ApplicationWindow {
                             }
                         }
                     }
-
                     RowLayout {
                         CheckBox {
                             id: boldCheck
+                            Layout.preferredWidth: txtPropsLyt.checkBoxWidth
                             text: "Bold"
                             onCheckedChanged: {
                                 if (mainWindow.selectedTextItem && mainWindow.selectedTextItem.hasOwnProperty('fontBold'))
@@ -710,10 +711,32 @@ ApplicationWindow {
                         }
                         CheckBox {
                             id: italicCheck
+                            Layout.preferredWidth: txtPropsLyt.checkBoxWidth
                             text: "Italic"
                             onCheckedChanged: {
                                 if (mainWindow.selectedTextItem && mainWindow.selectedTextItem.hasOwnProperty('fontItalic'))
                                 mainWindow.selectedTextItem.fontItalic = checked
+                            }
+                        }
+                    }
+
+                    RowLayout {
+                        CheckBox {
+                            id: underlineCheck
+                            Layout.preferredWidth: txtPropsLyt.checkBoxWidth
+                            text: "Underline"
+                            onCheckedChanged: {
+                                if (mainWindow.selectedTextItem && mainWindow.selectedTextItem.hasOwnProperty('fontUnderline'))
+                                    mainWindow.selectedTextItem.fontUnderline = checked
+                            }
+                        }
+                        CheckBox {
+                            id: strikeoutCheck
+                            Layout.preferredWidth: txtPropsLyt.checkBoxWidth
+                            text: "Strikeout"
+                            onCheckedChanged: {
+                                if (mainWindow.selectedTextItem && mainWindow.selectedTextItem.hasOwnProperty('fontStrikeout'))
+                                    mainWindow.selectedTextItem.fontStrikeout = checked
                             }
                         }
                     }
@@ -1151,6 +1174,8 @@ ApplicationWindow {
             property alias fontSize: textEdit.font.pixelSize
             property alias fontBold: textEdit.font.bold
             property alias fontItalic: textEdit.font.italic
+            property alias fontUnderline: textEdit.font.underline
+            property alias fontStrikeout: textEdit.font.strikeout
             property alias textColor: textEdit.color
             property alias textRotation: textRect.rotation
             property alias itemLayer: textRect.z
@@ -1628,6 +1653,8 @@ ApplicationWindow {
             fontSize.value = selectedTextItem.fontSize
             boldCheck.checked = selectedTextItem.fontBold
             italicCheck.checked = selectedTextItem.fontItalic
+            underlineCheck.checked = selectedTextItem.fontUnderline
+            strikeoutCheck.checked = selectedTextItem.fontStrikeout
             colorPicker.selectedColor = selectedTextItem.textColor
         } else {
             // Clear controls when nothing is selected or image is selected
@@ -1636,6 +1663,8 @@ ApplicationWindow {
             fontSize.value = 24
             boldCheck.checked = false
             italicCheck.checked = false
+            underlineCheck.checked = false
+            strikeoutCheck.checked = false
             colorPicker.selectedColor = Colors.placeholderColor
         }
     }
