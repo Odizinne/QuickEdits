@@ -1805,7 +1805,9 @@ ApplicationWindow {
 
                 // Selection border - fixed size compensated for zoom
                 Rectangle {
-                    anchors.fill: parent
+                    anchors.centerIn: parent
+                    width: layerImage.paintedWidth + 4 / mainWindow.zoomFactor
+                    height: layerImage.paintedHeight + 4 / mainWindow.zoomFactor
                     color: imageRect.selected ? Colors.accentColorDimmed : "transparent"
                     border.width: imageRect.selected ? 2 / mainWindow.zoomFactor : 0
                     border.color: Colors.accentColor
@@ -1816,14 +1818,17 @@ ApplicationWindow {
                     id: layerImage
                     anchors.fill: parent
                     fillMode: Image.PreserveAspectFit
+                    anchors.margins: 2 / mainWindow.zoomFactor
                 }
 
                 // Main mouse area for dragging and selection
                 MouseArea {
-                    anchors.fill: parent
+                    anchors.centerIn: parent
+                    width: layerImage.paintedWidth
+                    height: layerImage.paintedHeight
                     anchors.rightMargin: 8 / mainWindow.zoomFactor
                     anchors.bottomMargin: 8 / mainWindow.zoomFactor
-                    anchors.topMargin: 15 / mainWindow.zoomFactor // Leave space for rotation handle
+                    anchors.topMargin: 15 / mainWindow.zoomFactor
                     drag.target: imageRect
                     drag.minimumX: 0
                     drag.maximumX: scaledContent.width - imageRect.width
@@ -1846,8 +1851,7 @@ ApplicationWindow {
                     width: 12 / mainWindow.zoomFactor
                     height: 12 / mainWindow.zoomFactor
                     anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.top: parent.top
-                    anchors.topMargin: -6 / mainWindow.zoomFactor
+                    y: (parent.height - layerImage.paintedHeight) / 2 - 6 / mainWindow.zoomFactor
                     visible: imageRect.selected
                     cursorShape: Qt.OpenHandCursor
 
@@ -1894,8 +1898,8 @@ ApplicationWindow {
                     id: resizeHandle
                     width: 10 / mainWindow.zoomFactor
                     height: 10 / mainWindow.zoomFactor
-                    anchors.right: parent.right
-                    anchors.bottom: parent.bottom
+                    x: parent.width / 2 + layerImage.paintedWidth / 2 + 2 / mainWindow.zoomFactor - width
+                    y: parent.height / 2 + layerImage.paintedHeight / 2 + 2 / mainWindow.zoomFactor - height
                     visible: imageRect.selected
                     cursorShape: Qt.SizeFDiagCursor
 
