@@ -18,6 +18,13 @@ ApplicationWindow {
     title: "QuickEdits"
     Material.theme: UserSettings.darkMode ? Material.Dark : Material.Light
     color: Colors.backgroundColor
+    opacity: Qt.platform.os === "wasm" ? 0 : 1
+    Behavior on opacity {
+        NumberAnimation {
+            duration: 300
+            easing.type: Easing.InQuad
+        }
+    }
 
     property real zoomFactor: 1.0
     property real minZoom: 0.1
@@ -125,27 +132,7 @@ ApplicationWindow {
                         text: "Save Image"
                         enabled: mainWindow.currentImageSource !== ""
                         onClicked: {
-                            // Temporarily store current transform
-                            var originalZoom = mainWindow.zoomFactor
-                            var originalRotation = mainWindow.imageRotation
-
-                            // Reset to original size and rotation for export
-                            mainWindow.zoomFactor = 1.0
-                            mainWindow.imageRotation = 0
-
-                            // Wait a frame for the transform to apply, then proceed
-                            Qt.callLater(function() {
-                                if (Qt.platform.os === "wasm") {
-                                    ImageExporter.openSaveDialog(scaledContent)  // Use scaledContent instead of imageContainer
-                                } else {
-                                    saveFileDialog.generateFileName()
-                                    saveFileDialog.open()
-                                }
-
-                                // Restore original transform
-                                mainWindow.zoomFactor = originalZoom
-                                mainWindow.imageRotation = originalRotation
-                            })
+                            ImageExporter.openSaveDialog(scaledContent)
                         }
                     }
                 }
@@ -340,15 +327,9 @@ ApplicationWindow {
         target: ImageExporter
         function onSaveFileSelected(fileName) {
             console.log("QML: Save file selected:", fileName)
-            if (Qt.platform.os === "wasm") {
-                // For WebAssembly, show our custom naming dialog
-                saveNamingDialog.setFileName(fileName)
-                saveNamingDialog.open()
-            } else {
-                // For native, open the save dialog with suggested name
-                saveFileDialog.currentFile = Qt.resolvedUrl(saveFileDialog.currentFolder + "/" + fileName)
-                saveFileDialog.open()
-            }
+            // For both platforms, show the naming dialog first
+            saveNamingDialog.setFileName(fileName)
+            saveNamingDialog.open()
         }
     }
 
@@ -387,26 +368,16 @@ ApplicationWindow {
         onFileNameAccepted: function(fileName) {
             console.log("QML: Save dialog accepted with filename:", fileName)
 
-            // Store and reset transform for WASM save too
-            var originalZoom = mainWindow.zoomFactor
-            var originalRotation = mainWindow.imageRotation
-
-            mainWindow.zoomFactor = 1.0
-            mainWindow.imageRotation = 0
-
-            Qt.callLater(function() {
-                ImageExporter.saveImage(scaledContent, fileName)  // Use scaledContent instead of imageContainer
-
-                // Restore transform
-                mainWindow.zoomFactor = originalZoom
-                mainWindow.imageRotation = originalRotation
-            })
+            if (Qt.platform.os === "wasm") {
+                // WebAssembly: directly save the grabbed image
+                ImageExporter.saveGrabbedImage(fileName)
+            } else {
+                // Native: open file dialog with the chosen name
+                saveFileDialog.currentFile = Qt.resolvedUrl(saveFileDialog.currentFolder + "/" + fileName)
+                saveFileDialog.open()
+            }
 
             donatePopup.visible = UserSettings.displayDonate
-        }
-
-        onFileNameRejected: {
-            console.log("QML: Save dialog cancelled")
         }
     }
 
@@ -458,37 +429,9 @@ ApplicationWindow {
         nameFilters: ["PNG files (*.png)", "JPEG files (*.jpg *.jpeg)", "BMP files (*.bmp)", "WebP files (*.webp)", "All files (*)"]
         defaultSuffix: "png"
 
-        Component.onCompleted: {
-            generateFileName()
-        }
-
-        function generateFileName() {
-            if (mainWindow.currentImageSource !== "") {
-                var sourcePath = mainWindow.currentImageSource.toString()
-                var fileName = sourcePath.split('/').pop() // Get filename
-                var nameWithoutExt = fileName.substring(0, fileName.lastIndexOf('.'))
-                var extension = fileName.substring(fileName.lastIndexOf('.'))
-
-                var newFileName = nameWithoutExt + "_edited" + extension
-                currentFile = Qt.resolvedUrl(currentFolder + "/" + newFileName)
-            }
-        }
-
         onAccepted: {
-            // Store and reset transform for native save too
-            var originalZoom = mainWindow.zoomFactor
-            var originalRotation = mainWindow.imageRotation
-
-            mainWindow.zoomFactor = 1.0
-            mainWindow.imageRotation = 0
-
-            Qt.callLater(function() {
-                ImageExporter.saveImage(scaledContent, selectedFile)
-
-                // Restore transform
-                mainWindow.zoomFactor = originalZoom
-                mainWindow.imageRotation = originalRotation
-            })
+            // This will use the grabbed image since it's stored in ImageExporter
+            ImageExporter.saveImage(null, selectedFile)
         }
     }
 
@@ -527,14 +470,7 @@ ApplicationWindow {
         anchors.fill: parent
         anchors.margins: 15
         spacing: 15
-        opacity: Qt.platform.os === "wasm" ? 0 : 1
-
-        Behavior on opacity {
-            NumberAnimation {
-                duration: 300
-                easing.type: Easing.InQuad
-            }
-        }
+        visible: mainWindow.currentImageSource !== ""
 
         // Left panel - controls
         Pane {
@@ -893,121 +829,131 @@ ApplicationWindow {
                         // Anchors Section
                         MenuSeparator { Layout.fillWidth: true }
 
-                        Label {
-                            text: "Anchors"
-                            font.pixelSize: 16
-                            font.bold: true
-                        }
 
-                        Grid {
-                            Layout.fillWidth: true
-                            columns: 3
-                            spacing: 4
-
-                            MaterialButton {
-                                text: "↖"
-                                width: 30
-                                height: 30
-                                onClicked: {
-                                    if (mainWindow.selectedTextItem) {
-                                        mainWindow.selectedTextItem.x = 0
-                                        mainWindow.selectedTextItem.y = 0
-                                    }
-                                }
+                        RowLayout {
+                            Label {
+                                text: "Anchors"
+                                font.pixelSize: 16
+                                font.bold: true
+                                Layout.fillWidth: true
                             }
 
-                            MaterialButton {
-                                text: "↑"
-                                width: 30
-                                height: 30
-                                onClicked: {
-                                    if (mainWindow.selectedTextItem) {
-                                        mainWindow.selectedTextItem.x = (scaledContent.width - mainWindow.selectedTextItem.width) / 2
-                                        mainWindow.selectedTextItem.y = 0
+                            Grid {
+                                columns: 3
+                                spacing: 4
+
+                                AnchorsButton {
+                                    imageSource: "qrc:/icons/corner.svg"
+                                    imageRotation: 0
+                                    width: 30
+                                    height: 30
+                                    onClicked: {
+                                        if (mainWindow.selectedTextItem) {
+                                            mainWindow.selectedTextItem.x = 0
+                                            mainWindow.selectedTextItem.y = 0
+                                        }
                                     }
                                 }
-                            }
 
-                            MaterialButton {
-                                text: "↗"
-                                width: 30
-                                height: 30
-                                onClicked: {
-                                    if (mainWindow.selectedTextItem) {
-                                        mainWindow.selectedTextItem.x = scaledContent.width - mainWindow.selectedTextItem.width
-                                        mainWindow.selectedTextItem.y = 0
+                                AnchorsButton {
+                                    imageSource: "qrc:/icons/side.svg"
+                                    imageRotation: 90
+                                    width: 30
+                                    height: 30
+                                    onClicked: {
+                                        if (mainWindow.selectedTextItem) {
+                                            mainWindow.selectedTextItem.x = (scaledContent.width - mainWindow.selectedTextItem.width) / 2
+                                            mainWindow.selectedTextItem.y = 0
+                                        }
                                     }
                                 }
-                            }
 
-                            MaterialButton {
-                                text: "←"
-                                width: 30
-                                height: 30
-                                onClicked: {
-                                    if (mainWindow.selectedTextItem) {
-                                        mainWindow.selectedTextItem.x = 0
-                                        mainWindow.selectedTextItem.y = (scaledContent.height - mainWindow.selectedTextItem.height) / 2
+                                AnchorsButton {
+                                    imageSource: "qrc:/icons/corner.svg"
+                                    imageRotation: 90
+                                    width: 30
+                                    height: 30
+                                    onClicked: {
+                                        if (mainWindow.selectedTextItem) {
+                                            mainWindow.selectedTextItem.x = scaledContent.width - mainWindow.selectedTextItem.width
+                                            mainWindow.selectedTextItem.y = 0
+                                        }
                                     }
                                 }
-                            }
 
-                            MaterialButton {
-                                text: "●"
-                                width: 30
-                                height: 30
-                                onClicked: {
-                                    if (mainWindow.selectedTextItem) {
-                                        mainWindow.selectedTextItem.x = (scaledContent.width - mainWindow.selectedTextItem.width) / 2
-                                        mainWindow.selectedTextItem.y = (scaledContent.height - mainWindow.selectedTextItem.height) / 2
+                                AnchorsButton {
+                                    imageSource: "qrc:/icons/side.svg"
+                                    imageRotation: 0
+                                    width: 30
+                                    height: 30
+                                    onClicked: {
+                                        if (mainWindow.selectedTextItem) {
+                                            mainWindow.selectedTextItem.x = 0
+                                            mainWindow.selectedTextItem.y = (scaledContent.height - mainWindow.selectedTextItem.height) / 2
+                                        }
                                     }
                                 }
-                            }
 
-                            MaterialButton {
-                                text: "→"
-                                width: 30
-                                height: 30
-                                onClicked: {
-                                    if (mainWindow.selectedTextItem) {
-                                        mainWindow.selectedTextItem.x = scaledContent.width - mainWindow.selectedTextItem.width
-                                        mainWindow.selectedTextItem.y = (scaledContent.height - mainWindow.selectedTextItem.height) / 2
+                                AnchorsButton {
+                                    width: 30
+                                    height: 30
+                                    onClicked: {
+                                        if (mainWindow.selectedTextItem) {
+                                            mainWindow.selectedTextItem.x = (scaledContent.width - mainWindow.selectedTextItem.width) / 2
+                                            mainWindow.selectedTextItem.y = (scaledContent.height - mainWindow.selectedTextItem.height) / 2
+                                        }
                                     }
                                 }
-                            }
 
-                            MaterialButton {
-                                text: "↙"
-                                width: 30
-                                height: 30
-                                onClicked: {
-                                    if (mainWindow.selectedTextItem) {
-                                        mainWindow.selectedTextItem.x = 0
-                                        mainWindow.selectedTextItem.y = scaledContent.height - mainWindow.selectedTextItem.height
+                                AnchorsButton {
+                                    imageSource: "qrc:/icons/side.svg"
+                                    imageRotation: 180
+                                    width: 30
+                                    height: 30
+                                    onClicked: {
+                                        if (mainWindow.selectedTextItem) {
+                                            mainWindow.selectedTextItem.x = scaledContent.width - mainWindow.selectedTextItem.width
+                                            mainWindow.selectedTextItem.y = (scaledContent.height - mainWindow.selectedTextItem.height) / 2
+                                        }
                                     }
                                 }
-                            }
 
-                            MaterialButton {
-                                text: "↓"
-                                width: 30
-                                height: 30
-                                onClicked: {
-                                    if (mainWindow.selectedTextItem) {
-                                        mainWindow.selectedTextItem.x = (scaledContent.width - mainWindow.selectedTextItem.width) / 2
-                                        mainWindow.selectedTextItem.y = scaledContent.height - mainWindow.selectedTextItem.height
+                                AnchorsButton {
+                                    imageSource: "qrc:/icons/corner.svg"
+                                    imageRotation: 270
+                                    width: 30
+                                    height: 30
+                                    onClicked: {
+                                        if (mainWindow.selectedTextItem) {
+                                            mainWindow.selectedTextItem.x = 0
+                                            mainWindow.selectedTextItem.y = scaledContent.height - mainWindow.selectedTextItem.height
+                                        }
                                     }
                                 }
-                            }
 
-                            MaterialButton {
-                                text: "↘"
-                                width: 30
-                                height: 30
-                                onClicked: {
-                                    if (mainWindow.selectedTextItem) {
-                                        mainWindow.selectedTextItem.x = scaledContent.width - mainWindow.selectedTextItem.width
-                                        mainWindow.selectedTextItem.y = scaledContent.height - mainWindow.selectedTextItem.height
+                                AnchorsButton {
+                                    imageSource: "qrc:/icons/side.svg"
+                                    imageRotation: 270
+                                    width: 30
+                                    height: 30
+                                    onClicked: {
+                                        if (mainWindow.selectedTextItem) {
+                                            mainWindow.selectedTextItem.x = (scaledContent.width - mainWindow.selectedTextItem.width) / 2
+                                            mainWindow.selectedTextItem.y = scaledContent.height - mainWindow.selectedTextItem.height
+                                        }
+                                    }
+                                }
+
+                                AnchorsButton {
+                                    imageSource: "qrc:/icons/corner.svg"
+                                    imageRotation: 180
+                                    width: 30
+                                    height: 30
+                                    onClicked: {
+                                        if (mainWindow.selectedTextItem) {
+                                            mainWindow.selectedTextItem.x = scaledContent.width - mainWindow.selectedTextItem.width
+                                            mainWindow.selectedTextItem.y = scaledContent.height - mainWindow.selectedTextItem.height
+                                        }
                                     }
                                 }
                             }
@@ -1152,121 +1098,131 @@ ApplicationWindow {
                         // Anchors Section for Images
                         MenuSeparator { Layout.fillWidth: true }
 
-                        Label {
-                            text: "Anchors"
-                            font.pixelSize: 16
-                            font.bold: true
-                        }
-
-                        Grid {
-                            Layout.fillWidth: true
-                            columns: 3
-                            spacing: 4
-
-                            MaterialButton {
-                                text: "↖"
-                                width: 30
-                                height: 30
-                                onClicked: {
-                                    if (mainWindow.selectedTextItem) {
-                                        mainWindow.selectedTextItem.x = 0
-                                        mainWindow.selectedTextItem.y = 0
-                                    }
-                                }
+                        RowLayout {
+                            Label {
+                                text: "Anchors"
+                                font.pixelSize: 16
+                                font.bold: true
+                                Layout.fillWidth: true
                             }
 
-                            MaterialButton {
-                                text: "↑"
-                                width: 30
-                                height: 30
-                                onClicked: {
-                                    if (mainWindow.selectedTextItem) {
-                                        mainWindow.selectedTextItem.x = (scaledContent.width - mainWindow.selectedTextItem.width) / 2
-                                        mainWindow.selectedTextItem.y = 0
+                            Grid {
+                                Layout.fillWidth: true
+                                columns: 3
+                                spacing: 4
+
+                                AnchorsButton {
+                                    imageSource: "qrc:/icons/corner.svg"
+                                    imageRotation: 0
+                                    width: 30
+                                    height: 30
+                                    onClicked: {
+                                        if (mainWindow.selectedTextItem) {
+                                            mainWindow.selectedTextItem.x = 0
+                                            mainWindow.selectedTextItem.y = 0
+                                        }
                                     }
                                 }
-                            }
 
-                            MaterialButton {
-                                text: "↗"
-                                width: 30
-                                height: 30
-                                onClicked: {
-                                    if (mainWindow.selectedTextItem) {
-                                        mainWindow.selectedTextItem.x = scaledContent.width - mainWindow.selectedTextItem.width
-                                        mainWindow.selectedTextItem.y = 0
+                                AnchorsButton {
+                                    imageSource: "qrc:/icons/side.svg"
+                                    imageRotation: 90
+                                    width: 30
+                                    height: 30
+                                    onClicked: {
+                                        if (mainWindow.selectedTextItem) {
+                                            mainWindow.selectedTextItem.x = (scaledContent.width - mainWindow.selectedTextItem.width) / 2
+                                            mainWindow.selectedTextItem.y = 0
+                                        }
                                     }
                                 }
-                            }
 
-                            MaterialButton {
-                                text: "←"
-                                width: 30
-                                height: 30
-                                onClicked: {
-                                    if (mainWindow.selectedTextItem) {
-                                        mainWindow.selectedTextItem.x = 0
-                                        mainWindow.selectedTextItem.y = (scaledContent.height - mainWindow.selectedTextItem.height) / 2
+                                AnchorsButton {
+                                    imageSource: "qrc:/icons/corner.svg"
+                                    imageRotation: 90
+                                    width: 30
+                                    height: 30
+                                    onClicked: {
+                                        if (mainWindow.selectedTextItem) {
+                                            mainWindow.selectedTextItem.x = scaledContent.width - mainWindow.selectedTextItem.width
+                                            mainWindow.selectedTextItem.y = 0
+                                        }
                                     }
                                 }
-                            }
 
-                            MaterialButton {
-                                text: "●"
-                                width: 30
-                                height: 30
-                                onClicked: {
-                                    if (mainWindow.selectedTextItem) {
-                                        mainWindow.selectedTextItem.x = (scaledContent.width - mainWindow.selectedTextItem.width) / 2
-                                        mainWindow.selectedTextItem.y = (scaledContent.height - mainWindow.selectedTextItem.height) / 2
+                                AnchorsButton {
+                                    imageSource: "qrc:/icons/side.svg"
+                                    imageRotation: 0
+                                    width: 30
+                                    height: 30
+                                    onClicked: {
+                                        if (mainWindow.selectedTextItem) {
+                                            mainWindow.selectedTextItem.x = 0
+                                            mainWindow.selectedTextItem.y = (scaledContent.height - mainWindow.selectedTextItem.height) / 2
+                                        }
                                     }
                                 }
-                            }
 
-                            MaterialButton {
-                                text: "→"
-                                width: 30
-                                height: 30
-                                onClicked: {
-                                    if (mainWindow.selectedTextItem) {
-                                        mainWindow.selectedTextItem.x = scaledContent.width - mainWindow.selectedTextItem.width
-                                        mainWindow.selectedTextItem.y = (scaledContent.height - mainWindow.selectedTextItem.height) / 2
+                                AnchorsButton {
+                                    width: 30
+                                    height: 30
+                                    onClicked: {
+                                        if (mainWindow.selectedTextItem) {
+                                            mainWindow.selectedTextItem.x = (scaledContent.width - mainWindow.selectedTextItem.width) / 2
+                                            mainWindow.selectedTextItem.y = (scaledContent.height - mainWindow.selectedTextItem.height) / 2
+                                        }
                                     }
                                 }
-                            }
 
-                            MaterialButton {
-                                text: "↙"
-                                width: 30
-                                height: 30
-                                onClicked: {
-                                    if (mainWindow.selectedTextItem) {
-                                        mainWindow.selectedTextItem.x = 0
-                                        mainWindow.selectedTextItem.y = scaledContent.height - mainWindow.selectedTextItem.height
+                                AnchorsButton {
+                                    imageSource: "qrc:/icons/side.svg"
+                                    imageRotation: 180
+                                    width: 30
+                                    height: 30
+                                    onClicked: {
+                                        if (mainWindow.selectedTextItem) {
+                                            mainWindow.selectedTextItem.x = scaledContent.width - mainWindow.selectedTextItem.width
+                                            mainWindow.selectedTextItem.y = (scaledContent.height - mainWindow.selectedTextItem.height) / 2
+                                        }
                                     }
                                 }
-                            }
 
-                            MaterialButton {
-                                text: "↓"
-                                width: 30
-                                height: 30
-                                onClicked: {
-                                    if (mainWindow.selectedTextItem) {
-                                        mainWindow.selectedTextItem.x = (scaledContent.width - mainWindow.selectedTextItem.width) / 2
-                                        mainWindow.selectedTextItem.y = scaledContent.height - mainWindow.selectedTextItem.height
+                                AnchorsButton {
+                                    imageSource: "qrc:/icons/corner.svg"
+                                    imageRotation: 270
+                                    width: 30
+                                    height: 30
+                                    onClicked: {
+                                        if (mainWindow.selectedTextItem) {
+                                            mainWindow.selectedTextItem.x = 0
+                                            mainWindow.selectedTextItem.y = scaledContent.height - mainWindow.selectedTextItem.height
+                                        }
                                     }
                                 }
-                            }
 
-                            MaterialButton {
-                                text: "↘"
-                                width: 30
-                                height: 30
-                                onClicked: {
-                                    if (mainWindow.selectedTextItem) {
-                                        mainWindow.selectedTextItem.x = scaledContent.width - mainWindow.selectedTextItem.width
-                                        mainWindow.selectedTextItem.y = scaledContent.height - mainWindow.selectedTextItem.height
+                                AnchorsButton {
+                                    imageSource: "qrc:/icons/side.svg"
+                                    imageRotation: 270
+                                    width: 30
+                                    height: 30
+                                    onClicked: {
+                                        if (mainWindow.selectedTextItem) {
+                                            mainWindow.selectedTextItem.x = (scaledContent.width - mainWindow.selectedTextItem.width) / 2
+                                            mainWindow.selectedTextItem.y = scaledContent.height - mainWindow.selectedTextItem.height
+                                        }
+                                    }
+                                }
+
+                                AnchorsButton {
+                                    imageSource: "qrc:/icons/corner.svg"
+                                    imageRotation: 180
+                                    width: 30
+                                    height: 30
+                                    onClicked: {
+                                        if (mainWindow.selectedTextItem) {
+                                            mainWindow.selectedTextItem.x = scaledContent.width - mainWindow.selectedTextItem.width
+                                            mainWindow.selectedTextItem.y = scaledContent.height - mainWindow.selectedTextItem.height
+                                        }
                                     }
                                 }
                             }
@@ -1294,6 +1250,7 @@ ApplicationWindow {
                             }
                         }
                     }
+
 
                     Item {
                         Layout.fillHeight: true
@@ -1612,6 +1569,14 @@ ApplicationWindow {
                 visible: itemsModel.count === 0
             }
         }
+    }
+
+    Label {
+        text: "Import an image to start"
+        opacity: 0.5
+        font.pixelSize: 18
+        anchors.centerIn: parent
+        visible: mainWindow.currentImageSource === ""
     }
 
     Component {
@@ -2057,8 +2022,12 @@ ApplicationWindow {
             details = item.fontFamily + " " + item.fontSize + "pt"
         } else {
             // Image item
-            var fileName = item.source.toString().split('/').pop()
-            preview = fileName.length > 20 ? fileName.substring(0, 20) + "..." : fileName
+            if (Qt.platform.os === "wasm") {
+                preview = "Imported image"
+            } else {
+                var fileName = item.source.toString().split('/').pop()
+                preview = fileName.length > 20 ? fileName.substring(0, 20) + "..." : fileName
+            }
             type = "Image"
             details = Math.round(item.width) + "×" + Math.round(item.height)
         }
@@ -2104,8 +2073,12 @@ ApplicationWindow {
                                 item.textContent
                     details = item.fontFamily + " " + item.fontSize + "pt"
                 } else {
-                    var fileName = item.source.toString().split('/').pop()
-                    preview = fileName.length > 20 ? fileName.substring(0, 20) + "..." : fileName
+                    if (Qt.platform.os === "wasm") {
+                        preview = "Imported image"
+                    } else {
+                        var fileName = item.source.toString().split('/').pop()
+                        preview = fileName.length > 20 ? fileName.substring(0, 20) + "..." : fileName
+                    }
                     details = Math.round(item.width) + "×" + Math.round(item.height)
                 }
 

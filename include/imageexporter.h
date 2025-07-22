@@ -5,6 +5,7 @@
 #include <QQuickItem>
 #include <QUrl>
 #include <QtQml/qqml.h>
+#include <QImage>
 
 class ImageExporter : public QObject
 {
@@ -19,6 +20,7 @@ public:
 public slots:
     void saveImage(QQuickItem* imageContainer, const QUrl& fileUrl);
     void openSaveDialog(QQuickItem* imageContainer);
+    void saveGrabbedImage(const QString& fileName);
 
 signals:
     void saveFileSelected(const QString& fileName);
@@ -26,7 +28,7 @@ signals:
 private:
     explicit ImageExporter(QObject *parent = nullptr);
     static ImageExporter* m_instance;
-    QQuickItem* m_pendingImageContainer;
+    QImage m_grabbedImage;
 };
 
 #endif // IMAGEEXPORTER_H

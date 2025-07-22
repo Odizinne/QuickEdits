@@ -9,5 +9,8 @@
         <file>moon.png</file>
         <file>windows.svg</file>
         <file>linux.svg</file>
+        <file>center.svg</file>
+        <file>side.svg</file>
+        <file>corner.svg</file>
     </qresource>
 </RCC>
