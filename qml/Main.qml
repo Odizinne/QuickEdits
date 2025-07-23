@@ -1473,7 +1473,6 @@ ApplicationWindow {
                         id: itemListView
                         model: itemsModel
                         spacing: 8
-
                         delegate: Item {
                             id: delegateRoot
                             width: lyrScroll.sbVisible ? itemListView.width - 20 : itemListView.width
@@ -1523,24 +1522,62 @@ ApplicationWindow {
                                         }
                                     }
 
-                                    ColumnLayout {
+                                    RowLayout {
                                         anchors.fill: parent
                                         anchors.margins: 8
-                                        spacing: 4
+                                        spacing: 12
 
-                                        Label {
-                                            Layout.fillWidth: true
-                                            text: delegateRoot.model.preview
-                                            color: Material.foreground
-                                            font.weight: delegateRoot.model.isSelected ? Font.Bold : Font.Normal
-                                            elide: Text.ElideRight
-                                            font.pixelSize: 12
+                                        // Visual preview area - only for images
+                                        Rectangle {
+                                            Layout.preferredWidth: 50
+                                            Layout.preferredHeight: 50
+                                            color: "transparent"
+                                            border.color: Colors.accentColor
+                                            border.width: 1
+                                            radius: Material.ExtraSmallScale
+                                            clip: true
+                                            visible: delegateRoot.model.item && !delegateRoot.model.item.hasOwnProperty('textContent')
+
+                                            Image {
+                                                anchors.fill: parent
+                                                anchors.margins: 2
+                                                source: delegateRoot.model.item && !delegateRoot.model.item.hasOwnProperty('textContent') ?
+                                                       delegateRoot.model.item.source : ""
+                                                fillMode: Image.PreserveAspectCrop
+                                            }
                                         }
 
-                                        Label {
+                                        // Text information
+                                        ColumnLayout {
                                             Layout.fillWidth: true
-                                            text: delegateRoot.model.type + " - " + delegateRoot.model.details
-                                            font.pixelSize: 11
+                                            spacing: 4
+
+                                            Label {
+                                                Layout.fillWidth: true
+                                                text: delegateRoot.model.preview
+                                                color: delegateRoot.model.item && delegateRoot.model.item.hasOwnProperty('textContent') ?
+                                                      delegateRoot.model.item.textColor : Material.foreground
+                                                font.family: delegateRoot.model.item && delegateRoot.model.item.hasOwnProperty('textContent') ?
+                                                            delegateRoot.model.item.fontFamily : font.family
+                                                font.weight: delegateRoot.model.item && delegateRoot.model.item.hasOwnProperty('textContent') ?
+                                                            (delegateRoot.model.item.fontBold ? Font.Bold : Font.Normal) :
+                                                            (delegateRoot.model.isSelected ? Font.Bold : Font.Normal)
+                                                font.italic: delegateRoot.model.item && delegateRoot.model.item.hasOwnProperty('textContent') ?
+                                                            delegateRoot.model.item.fontItalic : false
+                                                font.underline: delegateRoot.model.item && delegateRoot.model.item.hasOwnProperty('textContent') ?
+                                                               delegateRoot.model.item.fontUnderline : false
+                                                font.strikeout: delegateRoot.model.item && delegateRoot.model.item.hasOwnProperty('textContent') ?
+                                                               delegateRoot.model.item.fontStrikeout : false
+                                                elide: Text.ElideRight
+                                                font.pixelSize: 12
+                                            }
+
+                                            Label {
+                                                Layout.fillWidth: true
+                                                text: delegateRoot.model.type + " - " + delegateRoot.model.details
+                                                font.pixelSize: 11
+                                                opacity: 0.7
+                                            }
                                         }
                                     }
                                 }
@@ -2108,6 +2145,9 @@ ApplicationWindow {
                 itemsModel.setProperty(i, "preview", preview || "Empty")
                 itemsModel.setProperty(i, "details", details)
                 itemsModel.setProperty(i, "layer", item.itemLayer)
+
+                // Force the ListView to update by emitting dataChanged
+                // This ensures visual previews refresh when properties change
                 break
             }
         }
