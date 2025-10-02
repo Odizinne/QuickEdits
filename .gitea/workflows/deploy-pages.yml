@@ -1,0 +1,48 @@
+name: Build and Deploy WASM
+on:
+  workflow_dispatch:
+env:
+  DEPLOY_PATH: /var/www/quickedits
+ 
+jobs:
+  deploy:
+    runs-on: linux
+    container:
+      image: git.odizinne.com/odizinne/wasm-ubuntu-22.04:latest
+   
+    steps:
+      - uses: https://git.odizinne.com/Odizinne/gitea-actions/clone@main
+
+      - name: Build WebAssembly
+        shell: bash
+        run: |
+          . ${EMSDK}/emsdk_env.sh
+          mkdir build
+          cd build
+         
+          export QT_NO_PRIVATE_MODULE_WARNING=ON
+         
+          cmake .. \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DQT_CHAINLOAD_TOOLCHAIN_FILE=${EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
+            -DCMAKE_TOOLCHAIN_FILE="$QT_WASM_PATH/lib/cmake/Qt6/qt.toolchain.cmake" \
+            -DCMAKE_PREFIX_PATH="$QT_WASM_PATH" \
+            -DCMAKE_FIND_ROOT_PATH="$QT_WASM_PATH" \
+            -DQT_HOST_PATH="$QT_HOST_PATH"
+          cmake --build . --parallel
+         
+      - name: Copy index.html and favicon to build directory
+        run: |
+          cp index.html build/ || echo "No index.html found in root"
+          cp resources/icons/icon.ico build/favicon.ico || echo "No icon.ico found in resources/icons/"
+          echo "Files in build directory:"
+          ls -la build/
+     
+      - uses: https://git.odizinne.com/Odizinne/gitea-actions/deploy-ssh@main
+        with:
+          ssh_key: ${{ secrets.SSH_PRIVATE_KEY }}
+          ssh_port: ${{ secrets.SSH_PORT }}
+          server_user: ${{ secrets.SERVER_USER }}
+          server_host: ${{ secrets.SERVER_HOST }}
+          source_path: 'build/'
