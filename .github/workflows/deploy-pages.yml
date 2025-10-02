@@ -6,12 +6,12 @@ env:
  
 jobs:
   deploy:
-    runs-on: linux
+    runs-on: ubuntu-22.04
     container:
-      image: git.odizinne.com/odizinne/wasm-ubuntu-22.04:latest
+      image: ghcr.io/odizinne/latestqt-wasm-ubuntu-22.04:latest
    
     steps:
-      - uses: https://git.odizinne.com/Odizinne/gitea-actions/clone@main
+      - uses: actions/checkout@v4
 
       - name: Build WebAssembly
         shell: bash
@@ -36,10 +36,9 @@ jobs:
         run: |
           cp index.html build/ || echo "No index.html found in root"
           cp resources/icons/icon.ico build/favicon.ico || echo "No icon.ico found in resources/icons/"
-          echo "Files in build directory:"
-          ls -la build/
+
      
-      - uses: https://git.odizinne.com/Odizinne/gitea-actions/deploy-ssh@main
+      - uses: Odizinne/github-actions/deploy-ssh@main
         with:
           ssh_key: ${{ secrets.SSH_PRIVATE_KEY }}
           ssh_port: ${{ secrets.SSH_PORT }}
